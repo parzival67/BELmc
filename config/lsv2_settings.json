@@ -2,9 +2,27 @@
   "lsv2": [
     {
       "machine_id": 2,
-      "machine_name": "abc",
-      "ip_address": "172.16.0.21",
-      "controller_version": "iTNC530"
+      "machine_name": "DMU 60eVo Linear",
+      "controller_version": "iTNC 640",
+      "ip_address": "172.16.0.11"
+    },
+    {
+      "machine_id": 3,
+      "machine_name": "DMU-60MB 5 Axis",
+      "controller_version": "iTNC 530",
+      "ip_address": "172.16.0.21"
+    },
+    {
+      "machine_id": 4,
+      "machine_name": "DMU-50",
+      "controller_version": "iTNC 530",
+      "ip_address": "172.16.0.16"
+    },
+    {
+      "machine_id": 5,
+      "machine_name": "VCP800W Duro",
+      "controller_version": "iTNC 530",
+      "ip_address": "172.16.0.1"
     }
   ]
 }

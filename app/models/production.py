@@ -98,3 +98,18 @@ class ConfigInfo(db.Entity):
     planned_non_production_time = Required(int)
     planned_downtime = Required(int)
     updatedate = Required(datetime, default=lambda: datetime.utcnow(), auto=True)
+
+
+class MachineDowntimes(db.Entity):
+    _table_ = ('production', 'machine_downtimes')
+
+    id = PrimaryKey(int, auto=True)
+    machine_id = Required(int)
+    priority = Optional(int)
+    category = Optional(str, nullable=True)
+    description = Optional(str, nullable=True)
+    open_dt = Required(datetime)
+    inprogress_dt = Optional(datetime)
+    closed_dt = Optional(datetime)
+    reported_by = Optional(int)
+    action_taken = Optional(str, nullable=True)

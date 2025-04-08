@@ -4,7 +4,102 @@
       "machine_id": 2,
       "machine_name": "DMU 60eVo Linear",
       "controller_version": "iTNC 640",
-      "ip_address": "172.16.0.11"
+      "ip_address": "172.16.0.11",
+      "memory_type": "DWORD",
+      "param": {
+        "OP_MANUAL": 2534,
+        "OP_MDI": 2536,
+        "OP_HANDWHEEL": 2535,
+        "OP_AUTOMATIC_SINGLE": 2537,
+        "OP_AUTOMATIC_FULL": 2538
+      },
+      "parameters": [
+        {
+          "name": "OP_MANUAL",
+          "memory_type": "DWORD",
+          "address": 2534
+        },
+        {
+          "name": "OP_MDI",
+          "memory_type": "DWORD",
+          "address": 2536
+        },
+        {
+          "name": "OP_HANDWHEEL",
+          "memory_type": "DWORD",
+          "address": 2535
+        },
+        {
+          "name": "OP_AUTOMATIC_SINGLE",
+          "memory_type": "DWORD",
+          "address": 2537
+        },
+        {
+          "name": "OP_AUTOMATIC_FULL",
+          "memory_type": "DWORD",
+          "address": 2538
+        },
+        {
+          "name": "OP_TRAVERSING",
+          "memory_type": "DWORD",
+          "address": 2539
+        },
+        {
+          "name": "PR_RUNNING",
+          "memory_type": "DWORD",
+          "address": 2588
+        },
+        {
+          "name": "PR_INTERRUPTED",
+          "memory_type": "DWORD",
+          "address": 2590
+        },
+        {
+          "name": "PR_ERROR_ACTIVE",
+          "memory_type": "DWORD",
+          "address": 2576
+        },
+        {
+          "name": "PR_STOPPED_EXT",
+          "memory_type": "DWORD",
+          "address": 2577
+        },
+        {
+          "name": "PR_STOPPED_EXT_NC_STOP",
+          "memory_type": "DWORD",
+          "address": 2579
+        },
+        {
+          "name": "PR_EMERGENCY_A",
+          "memory_type": "DWORD",
+          "address": 2581
+        },
+        {
+          "name": "PR_EMERGENCY_B",
+          "memory_type": "DWORD",
+          "address": 2582
+        },
+        {
+          "name": "PR_EMERGENCY_C",
+          "memory_type": "DWORD",
+          "address": 2583
+        },
+        {
+          "name": "PR_FINISHED",
+          "memory_type": "DWORD",
+          "address": 2592
+        },
+        {
+          "name": "CYCLE_TIME",
+          "memory_type": "DWORD",
+          "address": 3502
+        },
+        {
+          "name": "CYCLE_CUTTING_COUNT",
+          "memory_type": "DWORD",
+          "address": 3504
+        }
+      ]
     },
     {
       "machine_id": 3,

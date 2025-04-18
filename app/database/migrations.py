@@ -1,5 +1,6 @@
+from pony.orm import db_session
 import psycopg2
-from config.db_settings import settings
+from ..config.settings import settings
 
 def run_migrations():
     """Run database migrations"""

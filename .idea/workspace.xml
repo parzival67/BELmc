@@ -4,15 +4,27 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="second commit">
-      <change afterPath="$PROJECT_DIR$/collector_lsv2_temp.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collector_opcua_temp.py" afterDir="false" />
+    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="added temp commit">
+      <change afterPath="$PROJECT_DIR$/app/config/settings.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/document_management_v2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/logs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/quality.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/production.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/connection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/init_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/init_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/migrations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document_management.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document_management.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventoryv1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventoryv1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/master_order.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/master_order.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models/production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/production.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/collector_ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_ems.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/lsv2_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/lsv2_settings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/scheduled.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/scheduled.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_lsv2.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_lsv2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_lsv2_temp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_opcua.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_opcua.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_opcua_temp.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -46,6 +58,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Python.collector_lsv2 (1).executor": "Run",
     "Python.collector_lsv2_temp.executor": "Run",
     "Python.collector_opcua.executor": "Run",
     "Python.collector_opcua_temp.executor": "Run",
@@ -63,12 +77,12 @@
       <recent name="D:\codes\BELmc" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="D:\codes\BELmc" />
       <recent name="D:\codes\BELmc\app" />
+      <recent name="D:\codes\BELmc" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.collector_opcua_temp">
-    <configuration name="collector_lsv2_temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.collector_lsv2 (1)">
+    <configuration name="collector_lsv2 (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -81,7 +95,29 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_lsv2_temp.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_lsv2.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="collector_lsv2" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BELmc" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="D:\codes\BELmc\collector_lsv2.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -112,7 +148,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="collector_opcua_temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="collector_opcua" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -125,7 +161,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_opcua_temp.py" />
+      <option name="SCRIPT_NAME" value="D:\codes\BELmc\collector_opcua.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -156,35 +192,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BELmc" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.collector_lsv2 (1)" />
+        <item itemvalue="Python.collector_opcua" />
         <item itemvalue="Python.collector_opcua_temp" />
         <item itemvalue="Python.scratch" />
         <item itemvalue="Python.collector_lsv2_temp" />
-        <item itemvalue="Python.collector_opcua" />
-        <item itemvalue="Python.scratch_1" />
       </list>
     </recent_temporary>
   </component>
@@ -220,7 +234,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743508173260</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="added temp commit">
+      <option name="closed" value="true" />
+      <created>1744114844079</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1744114844079</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -235,64 +257,10 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="first commit" />
     <MESSAGE value="second commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="second commit" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>156</line>
-          <option name="timeStamp" value="14" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>187</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>189</line>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>210</line>
-          <option name="timeStamp" value="20" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>223</line>
-          <option name="timeStamp" value="21" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>301</line>
-          <option name="timeStamp" value="22" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>165</line>
-          <option name="timeStamp" value="23" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>174</line>
-          <option name="timeStamp" value="24" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>171</line>
-          <option name="timeStamp" value="25" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_opcua.py</url>
-          <line>170</line>
-          <option name="timeStamp" value="26" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="added temp commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="added temp commit" />
   </component>
 </project>

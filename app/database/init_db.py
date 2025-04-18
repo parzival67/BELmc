@@ -1,5 +1,6 @@
+from pony.orm import db_session
 import psycopg2
-from config.db_settings import settings
+from ..config.settings import settings
 
 def init_database():
     """Initialize database schemas"""
@@ -20,7 +21,8 @@ def init_database():
         "document_management",
         "hr",
         "finance",
-        "inventoryv1"
+        "inventoryv1",
+        "document_management_v2"
     ]
 
     for schema in schemas:

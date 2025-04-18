@@ -74,3 +74,4 @@ class ProductionLog(db.Entity):
     quantity_completed = Optional(int)
     quantity_rejected = Optional(int)
     notes = Optional(str)
+

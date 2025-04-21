@@ -3,84 +3,50 @@ from pony.orm import Database, Required, Optional, Set
 from ..database.connection import db
 
 
-class EMSMachine(db.Entity):
-    _table_ = ('EMS', 'machine')
+class MachineEMSHistory(db.Entity):
+    _table_ = ('EMS', 'machine_ems_history')
 
-    machine_name = Required(str)
-    workshop_name = Required(str)
-    mqtt_topic = Required(str)
-    mqtt_mach_iden = Required(str)
-    histories = Set('MachineHistory')
-    recents = Set('Recent')
-    on_states = Set('On')
-    off_states = Set('Off')
-    prod_states = Set('Production')
-    graph_data = Set('Graph')
-    state = Set('State')
-    shiftlive = Set('ShiftwiseEnergyLive')
-    shifthistory = Set('ShiftwiseEnergyHistory')
-
-
-class MachineHistory(db.Entity):
-    _table_ = ('EMS', 'machine_history')
-
-    current = Optional(float)
-    power = Optional(float)
-    energy = Optional(float)
+    machine_id = Required(int)
     timestamp = Required(datetime, default=datetime.now)
-    machine_id = Required(EMSMachine)
+    phase_a_voltage = Optional(float)
+    phase_b_voltage = Optional(float)
+    phase_c_voltage = Optional(float)
+    avg_phase_voltage = Optional(float)
+    line_ab_voltage = Optional(float)
+    line_bc_voltage = Optional(float)
+    line_ca_voltage = Optional(float)
+    avg_line_voltage = Optional(float)
+    phase_a_current = Optional(float)
+    phase_b_current = Optional(float)
+    phase_c_current = Optional(float)
+    avg_three_phase_current = Optional(float)
+    power_factor = Optional(float)
+    frequency = Optional(float)
+    total_instantaneous_power = Optional(float)
+    active_energy_delivered = Optional(float)
 
 
-class Recent(db.Entity):
-    _table_ = ('EMS', 'machine_recent')
+class MachineEMSLive(db.Entity):
+    _table_ = ('EMS', 'machine_ems_live')
 
-    current = Optional(float)
-    power = Optional(float)
-    energy = Optional(float)
+    machine_id = Required(int, unique=True)
     timestamp = Required(datetime, default=datetime.now)
-    machine_id = Required(EMSMachine, unique=True)
-
-
-class On(db.Entity):
-    _table_ = ('EMS', 'on_state')
-
-    current = Required(str)
-    timestamp = Required(datetime)
-    machine_id = Required(EMSMachine)
-
-
-class Off(db.Entity):
-    _table_ = ('EMS', 'off_state')
-
-    current = Required(str)
-    timestamp = Required(datetime)
-    machine_id = Required(EMSMachine)
-
-
-class Production(db.Entity):
-    _table_ = ('EMS', 'production_state')
-
-    current = Required(str)
-    timestamp = Required(datetime)
-    machine_id = Required(EMSMachine)
-
-
-class State(db.Entity):
-    _table_ = ('EMS', 'check_state')
-
-    start_current_range = Required(float)
-    end_current_range = Required(float)
-    state = Required(str)
-    machine_id = Required(EMSMachine)
-
-
-class Graph(db.Entity):
-    _table_ = ('EMS', 'graph_data')
-
-    start_time = Required(datetime)
-    end_time = Required(datetime)
-    state = Required(str)
-    machine_id = Required(EMSMachine)
+    phase_a_voltage = Optional(float)
+    phase_b_voltage = Optional(float)
+    phase_c_voltage = Optional(float)
+    avg_phase_voltage = Optional(float)
+    line_ab_voltage = Optional(float)
+    line_bc_voltage = Optional(float)
+    line_ca_voltage = Optional(float)
+    avg_line_voltage = Optional(float)
+    phase_a_current = Optional(float)
+    phase_b_current = Optional(float)
+    phase_c_current = Optional(float)
+    avg_three_phase_current = Optional(float)
+    power_factor = Optional(float)
+    frequency = Optional(float)
+    total_instantaneous_power = Optional(float)
+    active_energy_delivered = Optional(float)
 
 
 class ShiftwiseEnergyLive(db.Entity):
@@ -91,7 +57,7 @@ class ShiftwiseEnergyLive(db.Entity):
     second_shift = Required(float)
     third_shift = Required(float)
     total_energy = Required(float)
-    machine_id = Required(EMSMachine)
+    machine_id = Required(int)
 
 
 class ShiftwiseEnergyHistory(db.Entity):
@@ -102,4 +68,4 @@ class ShiftwiseEnergyHistory(db.Entity):
     second_shift = Required(float)
     third_shift = Required(float)
     total_energy = Required(float)
-    machine_id = Required(EMSMachine)
+    machine_id = Required(int)

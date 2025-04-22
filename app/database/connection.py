@@ -34,6 +34,7 @@ def connect_to_db():
         cursor.execute("CREATE SCHEMA IF NOT EXISTS production")
         cursor.execute("CREATE SCHEMA IF NOT EXISTS document_management_v2")
         cursor.execute("CREATE SCHEMA IF NOT EXISTS quality")
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS EMS")
 
         conn.commit()  # Ensure changes are saved
     except Exception as e:
@@ -43,7 +44,7 @@ def connect_to_db():
         cursor.close()
 
     # Import all models to ensure they're registered with the database
-    from ..models import hr_models, finance_models, master_order, user, document_management_v2, inventoryv1, quality
+    from ..models import hr_models, finance_models, master_order, user, document_management_v2, inventoryv1, quality, ems
 
     # Generate mapping after all models are imported
     db.generate_mapping(create_tables=True) 

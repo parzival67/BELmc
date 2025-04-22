@@ -4,7 +4,7 @@ from ..database.connection import db
 
 
 class MachineEMSHistory(db.Entity):
-    _table_ = ('EMS', 'machine_ems_history')
+    _table_ = ('ems', 'machine_ems_history')
 
     machine_id = Required(int)
     timestamp = Required(datetime, default=datetime.now)
@@ -27,7 +27,7 @@ class MachineEMSHistory(db.Entity):
 
 
 class MachineEMSLive(db.Entity):
-    _table_ = ('EMS', 'machine_ems_live')
+    _table_ = ('ems', 'machine_ems_live')
 
     machine_id = Required(int, unique=True)
     timestamp = Required(datetime, default=datetime.now)
@@ -50,7 +50,7 @@ class MachineEMSLive(db.Entity):
 
 
 class ShiftwiseEnergyLive(db.Entity):
-    _table_ = ('EMS', 'shiftwise_energy_live')
+    _table_ = ('ems', 'shiftwise_energy_live')
 
     timestamp = Required(datetime, default=datetime.now)
     first_shift = Required(float)
@@ -61,7 +61,7 @@ class ShiftwiseEnergyLive(db.Entity):
 
 
 class ShiftwiseEnergyHistory(db.Entity):
-    _table_ = ('EMS', 'shiftwise_energy_history')
+    _table_ = ('ems', 'shiftwise_energy_history')
 
     timestamp = Required(datetime, default=datetime.now)
     first_shift = Required(float)

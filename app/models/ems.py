@@ -31,6 +31,7 @@ class MachineEMSLive(db.Entity):
 
     machine_id = Required(int, unique=True)
     timestamp = Required(datetime, default=datetime.now)
+    status = Optional(int)
     phase_a_voltage = Optional(float)
     phase_b_voltage = Optional(float)
     phase_c_voltage = Optional(float)

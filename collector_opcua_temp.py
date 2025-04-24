@@ -1,17 +1,16 @@
 """
-LSV2 Machine Monitoring System
------------------------------
-This program connects to industrial machines via LSV2 protocol,
+OPC UA Machine Monitoring System
+--------------------------------
+This program connects to industrial machines via OPC UA protocol,
 monitors machine status, and records operational data in a database.
 """
 
 import json
-import re
 import time
 from datetime import datetime, timezone, timedelta
 from datetime import time as time_obj
 
-import pyLSV2
+from opcua import Client, ua
 from pony.orm import db_session, commit, desc, select
 
 from app.database.connection import connect_to_db
@@ -21,81 +20,93 @@ from app.models.production import (
 )
 
 
-# ===== LSV2 Client Management =====
+# ===== OPC UA Client Management =====
 
-class LSV2Client:
-    def __init__(self, machine_id, ip_address, safe_mode=False):
-        self.machine_id = machine_id
-        self.ip_address = ip_address
-        self.safe_mode = safe_mode
-        self.client = None
+class OpcUaClient:
+    def __init__(self, server_url, username=None, password=None):
+        self.server_url = server_url
+        self.username = username
+        self.password = password
+        self.client = Client(server_url)
 
-    def connect(self):
-        """Connect to the LSV2 server"""
+        if username:
+            self.client.set_user(username)
+        if password:
+            self.client.set_password(password)
+
+    def connect(self, machine_id):
         try:
-            self.client = pyLSV2.LSV2(self.ip_address, safe_mode=self.safe_mode)
             self.client.connect()
-            print(f"Successfully connected to machine ID: {self.machine_id} at {self.ip_address}")
+            print(f"Successfully connected to OPC UA Server: {self.server_url}")
             return True
         except Exception as e:
-            print(f"Failed to connect to machine ID: {self.machine_id}: {e}")
-            DatabaseManager.handle_disconnection(self.machine_id)
+            print(f"Failed to connect to OPC UA Server: {e}")
+            DatabaseManager.handle_disconnection(machine_id)
+            time.sleep(60)
             return False
 
     def disconnect(self):
-        """Disconnect from the LSV2 server"""
         try:
-            if self.client:
+            if self.is_connected():
                 self.client.disconnect()
-                print(f"Disconnected from machine ID: {self.machine_id}")
+                print("Disconnected from OPC UA Server")
         except Exception as e:
-            print(f"Error during LSV2 disconnect: {e}")
+            print(f"Error during OPC UA disconnect: {e}")
 
     def is_connected(self):
-        """Check if the client is connected"""
-        if not self.client:
-            return False
         try:
-            # Try to query something to check connection
-            self.client.execution_state()
-            return True
+            if self.client.uaclient and self.client.uaclient._uasocket:
+                return self.client.uaclient._uasocket._thread.is_alive()
+            return False
         except Exception:
             return False
 
-    def get_machine_data(self):
-        """Get machine data via LSV2 protocol"""
+    def get_node_value(self, node_id):
         try:
-            if not self.client:
-                raise ConnectionError("LSV2 client not initialized")
+            return self.client.get_node(node_id).get_value()
+        except Exception as e:
+            print(f"Error reading node {node_id}: {e}")
+            raise
+
+
+# ===== Machine Data Collection =====
+
+class MachineDataCollector:
+    def __init__(self, machine_id, opcua_client):
+        self.machine_id = machine_id
+        self.opcua_client = opcua_client
+        self.node_paths = {
+            "prog_status": "ns=2;s=/Channel/State/progStatus",
+            "op_mode": "ns=2;s=/Bag/State/opMode",
+            "part_count": "ns=2;s=/Channel/State/actParts",
+            "active_program": "ns=2;s=/Channel/ProgramInfo/progName",
+            "selected_program": "ns=2;s=/Channel/ProgramInfo/selectedWorkPProg"
+        }
+
+    def collect_data(self):
+        """Collect current machine data via OPC UA"""
+        try:
+            if not self.opcua_client.is_connected():
+                raise ConnectionError("OPC UA client not connected")
 
             data = {}
+            for key, node_id in self.node_paths.items():
+                data[key] = self.opcua_client.get_node_value(node_id)
 
-            # Get program status
-            data["prog_status"] = self.client.program_status().value
-
-            # Get operation mode
-            data["op_mode"] = self.client.execution_state().value
-
-            # Get active and selected programs
-            program_stack_text = str(self.client.program_stack())
-            program_match = re.search(r"Main\s+'([^']+)'\s+Current\s+'([^']+)'", program_stack_text)
-
-            if program_match:
-                data["selected_program"] = program_match.group(1)
-                data["active_program"] = program_match.group(2)
-            else:
-                data["selected_program"] = ""
-                data["active_program"] = ""
-
-            # Part count is not available in this implementation
-            data["part_count"] = 0
-            data["part_status"] = 0
+            # Convert numeric values to integers
+            for key in ["prog_status", "op_mode", "part_count"]:
+                data[key] = int(data[key])
 
             # Determine machine status based on program status
-            if data["prog_status"] == 0:
+            if data["prog_status"] == 3:
                 data["machine_status"] = 2  # Production
+                DatabaseManager.close_downtime(machine_id=1)
+
             else:
                 data["machine_status"] = 1  # Idle
+
+            # Default part status
+            data["part_status"] = 0
 
             return data
 
@@ -110,6 +121,7 @@ class DatabaseManager:
     @staticmethod
     @db_session
     def initialize_db():
+        print(StatusLookup.select().count())
         if StatusLookup.select().count() == 0:
             StatusLookup(status_id=0, status_name='OFF')
             StatusLookup(status_id=1, status_name='ON')
@@ -123,6 +135,8 @@ class DatabaseManager:
         if ConfigInfo.select().count() == 0:
             [ConfigInfo(machine_id=i, shift_duration=480, planned_non_production_time=40, planned_downtime=40)
              for i in range(8)]
+
+        commit()
 
     @staticmethod
     @db_session
@@ -181,23 +195,6 @@ class DatabaseManager:
             active_signal = MachineRawLive.get(machine_id=machine_id)
             if active_signal:
                 active_signal.timestamp = current_time
-                active_signal.op_mode = -1
-                active_signal.prog_status = -1
-                active_signal.status = 0
-                active_signal.part_count = 0
-                active_signal.selected_program = ''
-                active_signal.active_program = ''
-            else:
-                MachineRawLive(
-                    timestamp=current_time,
-                    machine_id=machine_id,
-                    op_mode=-1,
-                    prog_status=-1,
-                    status=0,
-                    part_count=0,
-                    selected_program='',
-                    active_program=''
-                )
 
             ShiftManager.manage_shift_summary(current_time, machine_id)
 
@@ -468,10 +465,12 @@ class ShiftManager:
 # ===== Main Application =====
 
 class MachineMonitor:
-    def __init__(self, config_path="config/lsv2_settings.json"):
+    def __init__(self, config_path="config/opcua_settings.json"):
         self.config_path = config_path
         self.config = None
-        self.clients = {}
+        self.machine_id = None
+        self.opcua_client = None
+        self.data_collector = None
         self.running = False
 
         # Operation intervals in seconds
@@ -482,35 +481,40 @@ class MachineMonitor:
         """Load configuration from JSON file"""
         try:
             with open(self.config_path, "r") as file:
-                self.config = json.load(file)['lsv2']
+                self.config = json.load(file)['opcua'][0]
+
+            self.machine_id = self.config['machine_id']
             return True
         except Exception as e:
             print(f"Error loading configuration: {e}")
             return False
 
     def setup(self):
-        """Setup database connection and LSV2 clients"""
+        """Setup database connection and OPC UA client"""
         try:
             # Connect to database
             connect_to_db()
-            DatabaseManager.initialize_db()
             print("Database connected successfully")
 
             # Load configuration
             if not self.load_config():
                 return False
 
-            # Create LSV2 clients for each machine
-            for machine_config in self.config:
-                machine_id = machine_config["machine_id"]
-                ip_address = machine_config["ip_address"]
+            # Create OPC UA client
+            server_url = f"opc.tcp://{self.config['ip_address']}:{self.config['port']}"
+            self.opcua_client = OpcUaClient(
+                server_url,
+                username=self.config['username'],
+                password=self.config['password']
+            )
 
-                # Create and store client
-                client = LSV2Client(machine_id, ip_address, safe_mode=False)
-                self.clients[machine_id] = client
+            # Create data collector
+            self.data_collector = MachineDataCollector(
+                self.machine_id,
+                self.opcua_client
+            )
 
-                # Attempt initial connection
-                client.connect()
+            DatabaseManager.initialize_db()
 
             return True
         except Exception as e:
@@ -518,43 +522,43 @@ class MachineMonitor:
             return False
 
     def run(self):
-        """Run the monitoring loop for all machines"""
+        """Run the monitoring loop"""
         if not self.setup():
             print("Failed to set up the machine monitor")
             return
 
         self.running = True
-        print(f"Starting monitoring for {len(self.clients)} machines")
+        print(f"Starting monitoring for machine ID: {self.machine_id}")
 
         try:
             while self.running:
-                for machine_id, client in self.clients.items():
-                    try:
-                        # Check if connected, if not, try to reconnect
-                        if not client.is_connected():
-                            if client.connect():
-                                print(f"Reconnected to machine ID: {machine_id}")
-                            else:
-                                # Handle disconnection in database
-                                DatabaseManager.handle_disconnection(machine_id)
-                                continue  # Skip this iteration for this machine
+                try:
+                    # Check if connected, if not, connect
+                    if not self.opcua_client.is_connected():
+                        self.opcua_client.connect(self.machine_id)
+                        if self.opcua_client.is_connected():
+                            print("Connected to OPC UA server")
+                        continue  # Skip this iteration to ensure we're connected
 
-                        # Collect data from machine
-                        data = client.get_machine_data()
+                    # Collect data from machine
+                    data = self.data_collector.collect_data()
 
-                        # Record data to database
-                        DatabaseManager.record_machine_data(machine_id, data)
+                    # Record data to database
+                    DatabaseManager.record_machine_data(self.machine_id, data)
 
-                    except ConnectionError:
-                        print(f"Connection error for machine ID: {machine_id}")
-                        DatabaseManager.handle_disconnection(machine_id)
+                    # Wait for next poll interval
+                    time.sleep(self.poll_interval)
 
-                    except Exception as e:
-                        print(f"Error monitoring machine ID: {machine_id}: {e}")
-                        DatabaseManager.handle_disconnection(machine_id)
+                except ConnectionError:
+                    print("Connection error, attempting to reconnect...")
+                    self.opcua_client.disconnect()
+                    DatabaseManager.handle_disconnection(self.machine_id)
+                    time.sleep(self.retry_delay)
 
-                # Wait before next polling cycle
-                time.sleep(self.poll_interval)
+                except Exception as e:
+                    print(f"Error during monitoring: {e}")
+                    DatabaseManager.handle_disconnection(self.machine_id)
+                    time.sleep(self.retry_delay)
 
         except KeyboardInterrupt:
             print("\nMonitoring stopped by user")
@@ -565,9 +569,9 @@ class MachineMonitor:
     def cleanup(self):
         """Clean up resources before exit"""
         try:
-            for machine_id, client in self.clients.items():
-                client.disconnect()
-            print("All machines disconnected")
+            if self.opcua_client:
+                self.opcua_client.disconnect()
+            print("Cleanup completed")
         except Exception as e:
             print(f"Error during cleanup: {e}")
 

@@ -22,6 +22,7 @@ def init_database():
         "hr",
         "finance",
         "inventoryv1",
+        "inventory",
         "document_management_v2"
     ]
 

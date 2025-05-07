@@ -4,20 +4,118 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="updated ems models 2">
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collector_ems.tar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/collector_opcua_temp.py" afterDir="false" />
+    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="Added EMS collector threshold monitoring function">
+      <change afterPath="$PROJECT_DIR$/app/algorithm/scheduling.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/algorithm/scheduling_copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/comp_maintainance.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/comp_operator.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/component_status.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/daily_production.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/document_management copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/document_management.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/document_management_v2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling_copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/inventoryv1 copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/inventoryv1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/mpp.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/mttr_mtbf.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/mttr_mtbf_copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/notification_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/notifications.sqlite" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operator_log.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operator_login.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/pdc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/planning.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/priority_scheduling.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production_logs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production_monitoring.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/programs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/quality.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/scheduled.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/toolsprograms.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/components/MachineDashboard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/components/MachineDetailDialog.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/component_quantities.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/leadtime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/operation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/quality.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/raw_material.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/user.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/master_order-copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/production-copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/routes/finance_routes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/routes/hr_routes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/routes/master_order_routes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/routes/pokayoke.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/comp_maintainance.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/component_quantities.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/component_status.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/daily_production.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/document_management_v2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/document_schemas copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/document_schemas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/finance_schemas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/hr_schemas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/inventoryv1 copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/inventoryv1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/leadtime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/master_order_schemas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/mpp.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/mttr_mtbf.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/operations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/planning.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/pokayoke.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/quality.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/raw_material.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/scheduled.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/scheduled1.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/toolsprograms.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/user.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/services/minio_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/services/oee_collector_ems.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/services/oee_collector_opcua.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/simulator/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/simulator/planned_schedule_items.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/simulator/planned_schedule_items_2.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/simulator/programs.csv" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/simulator/test copy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/simulator/test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/utils/production_calculations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/oee_engine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/database/connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/connection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/init_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/init_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/migrations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document_management.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document_management.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document_management_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document_management_v2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/models/ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/ems.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/finance_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/finance_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/hr_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/hr_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventoryv1 copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventoryv1 copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventoryv1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventoryv1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/master_order.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/master_order.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/production.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/quality.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/quality.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/scheduled.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/scheduled.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/collector_ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_ems.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/collector_ems_temp.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_ems_temp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_ems_temp.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/collector_lsv2.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_lsv2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/collector_opcua.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_opcua.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/ems_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/ems_settings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_opcua_temp.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/opcua_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/opcua_settings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +153,7 @@
     "Python.collector_ems_temp.executor": "Run",
     "Python.collector_lsv2 (1).executor": "Run",
     "Python.collector_lsv2_temp.executor": "Run",
+    "Python.collector_opcua (1).executor": "Run",
     "Python.collector_opcua.executor": "Run",
     "Python.collector_opcua_temp.executor": "Run",
     "Python.scratch.executor": "Run",
@@ -76,7 +175,7 @@
       <recent name="D:\codes\BELmc" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.scratch1">
+  <component name="RunManager" selected="Python.collector_lsv2 (1)">
     <configuration name="collector_ems" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
@@ -99,7 +198,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="collector_ems_temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="collector_ems" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -112,7 +211,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_ems_temp.py" />
+      <option name="SCRIPT_NAME" value="D:\codes\BELmc\collector_ems.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -143,6 +242,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="collector_opcua (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BELmc" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_opcua.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="collector_opcua" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
@@ -157,28 +278,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="D:\codes\BELmc\collector_opcua.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="collector_opcua_temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BELmc" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_opcua_temp.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -233,11 +332,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.scratch1" />
-        <item itemvalue="Python.collector_opcua_temp" />
-        <item itemvalue="Python.collector_ems_temp" />
-        <item itemvalue="Python.collector_ems_temp" />
         <item itemvalue="Python.collector_lsv2 (1)" />
+        <item itemvalue="Python.collector_opcua (1)" />
+        <item itemvalue="Python.collector_opcua_temp" />
+        <item itemvalue="Python.scratch1" />
       </list>
     </recent_temporary>
   </component>
@@ -305,7 +403,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745299634636</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Added EMS collector threshold monitoring function">
+      <option name="closed" value="true" />
+      <created>1745498965477</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1745498965477</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -327,14 +433,15 @@
     <MESSAGE value="post server deployment" />
     <MESSAGE value="updated ems models" />
     <MESSAGE value="updated ems models 2" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated ems models 2" />
+    <MESSAGE value="Added EMS collector threshold monitoring function" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added EMS collector threshold monitoring function" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app/database/connection.py</url>
-          <line>37</line>
+          <line>39</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -344,18 +451,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/app/database/connection.py</url>
-          <line>50</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_ems.py</url>
-          <line>26</line>
+          <line>52</line>
           <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/collector_ems.py</url>
-          <line>27</line>
-          <option name="timeStamp" value="5" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

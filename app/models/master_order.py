@@ -13,6 +13,7 @@ class WorkCenter(db.Entity):
     plant_id = Required(str)
     work_center_name = Optional(str)  # Renamed from 'operation'
     description = Optional(str)
+    is_schedulable = Optional(bool, default=False)  # New field to determine if scheduling is allowed
     machines = Set('Machine')
     operations = Set('Operation')
 
@@ -36,6 +37,8 @@ class Machine(db.Entity):
     status = Set('MachineStatus')
     operations = Set('Operation')  # Reverse relationship
     planned_schedule_items = Set('PlannedScheduleItem', reverse='machine')
+    credential = Optional('MachineCredential', reverse='machine')
+
 
 class MachineShift(db.Entity):
     _table_ = ("master_order", "machine_shifts")
@@ -106,6 +109,8 @@ class Order(db.Entity):
     inventory_requests = Set("InventoryRequest")
     documents_v2 = Set('DocumentV2', reverse='production_order')
     order_tools = Set("OrderTool", reverse="order")  # Updated relationship name
+    master_bocs = Set('MasterBoc', reverse='order')  # Add this line for MasterBoc relationship
+
 
 
 class Operation(db.Entity):
@@ -125,7 +130,11 @@ class Operation(db.Entity):
     mpps = Set('MPP', reverse='operation')
     planned_schedule_items = Set('PlannedScheduleItem', reverse='operation')
     order_tools = Set('OrderTool', reverse='operation')
-
+    production_logs = Set('ProductionLog', reverse='operation')
+    machine_raw_live_1 = Set('MachineRawLive', reverse='scheduled_job')
+    machine_raw_live_2 = Set('MachineRawLive', reverse='actual_job')
+    machine_raw_1 = Set('MachineRaw', reverse='scheduled_job')
+    machine_raw_2 = Set('MachineRaw', reverse='actual_job')
 
     inventory_requests = Set("InventoryRequest")
 
@@ -217,3 +226,4 @@ class MPP(db.Entity):
     datum_y = Optional(str)
     datum_z = Optional(str)
     work_instructions = Required(Json, default={"sections": []})
+

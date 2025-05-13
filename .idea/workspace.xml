@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="may update">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="12.05.2025 update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/ems.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_ems.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/oee_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/oee_engine.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
@@ -40,25 +41,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Python.collector_ems_temp.executor": "Run",
-    "Python.collector_lsv2 (1).executor": "Run",
-    "Python.collector_lsv2_temp.executor": "Run",
-    "Python.collector_opcua (1).executor": "Run",
-    "Python.collector_opcua.executor": "Run",
-    "Python.collector_opcua_temp.executor": "Run",
-    "Python.oee_engine.executor": "Run",
-    "Python.scratch.executor": "Run",
-    "Python.scratch1.executor": "Run",
-    "Python.scratch_1.executor": "Run",
-    "Python.tesst_opcua.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "D:/codes/BELmc/app/config"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python.collector_ems_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_lsv2 (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_lsv2_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_opcua (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_opcua.executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_opcua_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.oee_engine.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tesst_opcua.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/codes/BELmc/app/config&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\codes\BELmc\app\config" />
@@ -291,7 +292,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746619993382</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="12.05.2025 update">
+      <option name="closed" value="true" />
+      <created>1747053082043</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1747053082043</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -315,7 +324,8 @@
     <MESSAGE value="updated ems models 2" />
     <MESSAGE value="Added EMS collector threshold monitoring function" />
     <MESSAGE value="may update" />
-    <option name="LAST_COMMIT_MESSAGE" value="may update" />
+    <MESSAGE value="12.05.2025 update" />
+    <option name="LAST_COMMIT_MESSAGE" value="12.05.2025 update" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

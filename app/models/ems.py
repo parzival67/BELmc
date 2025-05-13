@@ -70,3 +70,11 @@ class ShiftwiseEnergyHistory(db.Entity):
     third_shift = Required(float)
     total_energy = Required(float)
     machine_id = Required(int)
+
+
+class EMSMachineStatusHistory(db.Entity):
+    _table_ = ('ems', 'ems_machine_status_history')
+
+    timestamp = Required(datetime, default=datetime.now)
+    machine_id = Required(int, unique=True)
+    status = Optional(int)

@@ -7,9 +7,11 @@ import json
 from datetime import datetime, timedelta, time
 
 from dotenv import load_dotenv
-from pony.orm import db_session
+from pony.orm import db_session, commit
 from app.database.connection import connect_to_db
-from app.models.ems import MachineEMSLive, MachineEMSHistory, ShiftwiseEnergyLive, ShiftwiseEnergyHistory
+from app.models.ems import MachineEMSLive, MachineEMSHistory, ShiftwiseEnergyLive, ShiftwiseEnergyHistory, \
+    EMSMachineStatusHistory
+from app.models.production import MachineRaw, MachineRawLive
 
 # Field mapping to match EMS models
 EMS_FIELDS = [
@@ -248,8 +250,42 @@ class DeltaPLCReader:
             MachineEMSLive(machine_id=meter_id, timestamp=timestamp, **data)
             status_changed = True  # New record = status change
 
+        if meter_id not in [1, 2, 3, 5, 14]:
+            active_signal = MachineRawLive.get(machine_id=meter_id)
+            if active_signal:
+                active_signal.timestamp = timestamp
+                active_signal.op_mode = -1
+                active_signal.prog_status = -1
+                active_signal.status = machine_status
+                active_signal.part_count = 0
+                active_signal.selected_program = ''
+                active_signal.active_program = ''
+            else:
+                MachineRawLive(
+                    timestamp=timestamp,
+                    machine_id=meter_id,
+                    op_mode=-1,
+                    prog_status=-1,
+                    status=0,
+                    part_count=0,
+                    selected_program='',
+                    active_program=''
+                )
+
         if status_changed:
             print(f"MACHINE {meter_id} >> {machine_status} | (0=OFF, 1=ON, 2=PRODUCTION)")
+
+            EMSMachineStatusHistory(machine_id=meter_id, status=machine_status, timestamp=timestamp)
+
+            if meter_id not in [1, 2, 3, 5, 14]:
+                MachineRaw(
+                    timestamp=timestamp,
+                    machine_id=meter_id,
+                    op_mode=-1,
+                    status=machine_status
+                )
+
+        commit()
 
     def read_continuously(self, interval=5.0, meters_to_read=None):
         if meters_to_read is None:

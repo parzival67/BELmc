@@ -338,30 +338,30 @@ class ShiftManager:
         shift_summary.idle_time = timedelta_to_time(idle_duration)
         shift_summary.production_time = timedelta_to_time(production_duration)
 
-        # Update part counts
-        shift_summary.total_parts = part_count
-        if part_status == 2:
-            shift_summary.good_parts = part_count
-            shift_summary.bad_parts = 0
-        else:
-            shift_summary.bad_parts = part_count - shift_summary.good_parts
-
-        # Calculate OEE metrics
-        shift_summary.availability = (idle_duration.total_seconds() / 60) / (config_info.shift_duration
-                                                                             - config_info.planned_non_production_time
-                                                                             - config_info.planned_downtime)
-        if production_duration.total_seconds() / 60 != 0:
-            shift_summary.performance = (shift_summary.total_parts * 1) / (production_duration.total_seconds() / 60)
-
-        if shift_summary.total_parts != 0:
-            shift_summary.quality = shift_summary.good_parts / shift_summary.total_parts
-
-        shift_summary.availability_loss = 100 - shift_summary.availability
-        shift_summary.performance_loss = 100 - shift_summary.performance
-        shift_summary.quality_loss = 100 - shift_summary.quality
-
-        # Calculate OEE
-        shift_summary.oee = shift_summary.availability * shift_summary.performance * shift_summary.quality / 10000
+        # # Update part counts
+        # shift_summary.total_parts = part_count
+        # if part_status == 2:
+        #     shift_summary.good_parts = part_count
+        #     shift_summary.bad_parts = 0
+        # else:
+        #     shift_summary.bad_parts = part_count - shift_summary.good_parts
+        #
+        # # Calculate OEE metrics
+        # shift_summary.availability = (idle_duration.total_seconds() / 60) / (config_info.shift_duration
+        #                                                                      - config_info.planned_non_production_time
+        #                                                                      - config_info.planned_downtime)
+        # if production_duration.total_seconds() / 60 != 0:
+        #     shift_summary.performance = (shift_summary.total_parts * 1) / (production_duration.total_seconds() / 60)
+        #
+        # if shift_summary.total_parts != 0:
+        #     shift_summary.quality = shift_summary.good_parts / shift_summary.total_parts
+        #
+        # shift_summary.availability_loss = 100 - shift_summary.availability
+        # shift_summary.performance_loss = 100 - shift_summary.performance
+        # shift_summary.quality_loss = 100 - shift_summary.quality
+        #
+        # # Calculate OEE
+        # shift_summary.oee = shift_summary.availability * shift_summary.performance * shift_summary.quality / 10000
 
         shift_summary.updatedate = datetime.now()
 

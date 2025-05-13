@@ -90,6 +90,10 @@ try:
                 oee = availability * performance * quality
                 print(availability, performance, quality)
 
+                shift_summary.total_parts = total_parts
+                shift_summary.good_parts = good_parts
+                shift_summary.bad_parts = total_parts - good_parts
+
                 shift_summary.availability = availability * 100
                 shift_summary.performance = performance * 100
                 shift_summary.quality = quality * 100

@@ -49,7 +49,6 @@ class MachineRawLive(db.Entity):
     prog_status = Optional(int)
     selected_program = Optional(str)
     active_program = Optional(str)
-    # program_number = Optional(str)
     part_count = Optional(int)
     job_status = Optional(int)
     job_in_progress = Optional(int)

@@ -47,7 +47,7 @@ def connect_to_db():
         cursor.close()
 
     # Import all models to ensure they're registered with the database
-    from ..models import hr_models, finance_models, master_order, user, document_management_v2, inventoryv1, quality, ems, inventory, logs
+    from ..models import hr_models, finance_models, master_order, user, document_management_v2, inventoryv1, quality, ems, inventory, logs, production
 
     # Generate mapping after all models are imported
     db.generate_mapping(create_tables=True)

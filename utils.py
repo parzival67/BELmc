@@ -43,7 +43,7 @@ class DatabaseManager:
             .order_by(lambda d: desc(d.open_dt)) \
             .first()
 
-        current_dt = datetime.now()
+        current_dt = datetime.now() + timedelta(hours=5, minutes=30)
 
         if recent_downtime and recent_downtime.closed_dt is None:
             recent_downtime.closed_dt = current_dt
@@ -59,8 +59,9 @@ class DatabaseManager:
             .order_by(lambda s: desc(s.timestamp)) \
             .first()
 
-        current_time = datetime.now()
+        current_time = datetime.now() + timedelta(hours=5, minutes=30)
         if (not recent_status) or recent_status.status.status_id != 0:
+            print('yeet', recent_status.status.status_id)
             MachineRaw(
                 timestamp=current_time,
                 machine_id=machine_id,
@@ -113,7 +114,7 @@ class DatabaseManager:
     def record_machine_data(machine_id, data):
         """Insert machine data into database"""
         try:
-            timestamp = datetime.now()
+            timestamp = datetime.now() + timedelta(hours=5, minutes=30)
 
             machine_status = data["machine_status"]
             operation_mode = data["op_mode"]
@@ -184,7 +185,7 @@ class DatabaseManager:
                     active_program=active_program
                 )
 
-            ShiftManager.manage_shift_summary(timestamp, machine_id, part_count, part_status)
+            ShiftManager.manage_shift_summary(timestamp, machine_id)
             commit()
 
         except Exception as e:
@@ -224,9 +225,10 @@ class ShiftManager:
 
     @staticmethod
     @db_session
-    def manage_shift_summary(timestamp, machine_id=14, part_count=0, part_status=0):
+    def manage_shift_summary(timestamp, machine_id=14):
         """Update shift summary with current machine data"""
         shift_id, shift_start_time, shift_end_time = ShiftManager.get_current_shift(timestamp)
+        timestamp1 = timestamp
 
         # Convert shift times to current date
         current_date = timestamp.date()
@@ -363,8 +365,9 @@ class ShiftManager:
         # # Calculate OEE
         # shift_summary.oee = shift_summary.availability * shift_summary.performance * shift_summary.quality / 10000
 
-        shift_summary.updatedate = datetime.now()
+        shift_summary.updatedate = timestamp1
 
+        commit()
         return shift_summary
 
 

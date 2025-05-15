@@ -12,6 +12,7 @@ from app.database.connection import connect_to_db
 from app.models.ems import MachineEMSLive, MachineEMSHistory, ShiftwiseEnergyLive, ShiftwiseEnergyHistory, \
     EMSMachineStatusHistory
 from app.models.production import MachineRaw, MachineRawLive
+from utils import ShiftManager, DatabaseManager
 
 # Field mapping to match EMS models
 EMS_FIELDS = [
@@ -28,14 +29,14 @@ machine_thresholds = {
     1: 2.3,
     2: 1.3,
     3: 4.3,
-    4: 3.1,
+    4: 2.9,
     5: 0,
     6: 2.3,
     7: 2.5,
     8: 1,
     9: 1,
     10: 1,
-    11: 1.8,
+    11: 1,
     12: 1.8,
     13: 2,
     14: 3,
@@ -68,7 +69,7 @@ class DeltaPLCReader:
     def convert_d_address(self, d_number):
         return d_number + 400001 - 1
 
-    def read_multiple_d_registers(self, start_d_number, num_registers):
+    def read_multiple_d_registers(self, meter_id, start_d_number, num_registers):
         try:
             modbus_address = self.convert_d_address(start_d_number)
             values = self.instrument.read_registers(modbus_address - 400001, num_registers)
@@ -93,7 +94,7 @@ class DeltaPLCReader:
 
         meter_data = self.meters[str(meter_id)]
         for name, (start_d_number, num_registers) in meter_data.items():
-            values = self.read_multiple_d_registers(start_d_number, num_registers)
+            values = self.read_multiple_d_registers(meter_id, start_d_number, num_registers)
             if values and len(values) >= 4:
                 if name == "ACTIVE ENERGY 3P DELIVERED":
                     bytes_val = struct.pack('BBBB', values[1], values[0], values[3], values[2])
@@ -247,7 +248,7 @@ class DeltaPLCReader:
             for key, value in data.items():
                 setattr(live, key, value)
         else:
-            MachineEMSLive(machine_id=meter_id, timestamp=timestamp, **data)
+            MachineEMSLive(machine_id=meter_id, timestamp=timestamp, status=machine_status, **data)
             status_changed = True  # New record = status change
 
         if meter_id not in [1, 2, 3, 5, 14]:
@@ -271,6 +272,8 @@ class DeltaPLCReader:
                     selected_program='',
                     active_program=''
                 )
+
+            ShiftManager.manage_shift_summary(timestamp, meter_id)
 
         if status_changed:
             print(f"MACHINE {meter_id} >> {machine_status} | (0=OFF, 1=ON, 2=PRODUCTION)")
@@ -298,13 +301,15 @@ class DeltaPLCReader:
                         readings = self.read_meter_values(meter_id)
                         if any(val is not None for _, val in readings):
                             self.save_to_db(meter_id, readings)
-                            print(f"Saved meter {meter_id} readings at {self.get_current_time()}")
+                            # print(f"Saved meter {meter_id} readings at {self.get_current_time()}")
 
                         else:
                             print(f"No valid data for meter {meter_id}")
+                            if meter_id not in [1, 2, 3, 5, 14]:
+                                DatabaseManager.handle_disconnection(meter_id)
                     except Exception as e:
                         print(f"Error processing meter {meter_id}: {e}")
-                tt.sleep(interval)
+                # tt.sleep(interval)
         except KeyboardInterrupt:
             print("Monitoring stopped by user")
 
@@ -315,7 +320,7 @@ def main():
 
     plc = DeltaPLCReader(port="/dev/ttyUSB0")
     # plc = DeltaPLCReader(port="COM5")
-    plc.read_continuously(interval=1.0, meters_to_read=[i for i in range(1, 15)])
+    plc.read_continuously(interval=0.1, meters_to_read=[i for i in range(1, 15)])
 
 
 if __name__ == '__main__':

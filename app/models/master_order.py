@@ -38,6 +38,7 @@ class Machine(db.Entity):
     operations = Set('Operation')  # Reverse relationship
     planned_schedule_items = Set('PlannedScheduleItem', reverse='machine')
     credential = Optional('MachineCredential', reverse='machine')
+    notification = Set('MachineCalibrationLog')
 
 
 class MachineShift(db.Entity):

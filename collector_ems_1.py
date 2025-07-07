@@ -4,6 +4,7 @@ import serial
 import struct
 import time as tt
 import json
+import logging
 from datetime import datetime, timedelta, time
 
 from dotenv import load_dotenv
@@ -14,6 +15,9 @@ from app.models.ems import MachineEMSLive, MachineEMSHistory, ShiftwiseEnergyLiv
 from app.models.production import MachineRaw, MachineRawLive
 from utils import ShiftManager, DatabaseManager
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+
 # Field mapping to match EMS models
 EMS_FIELDS = [
     "phase_a_voltage", "phase_b_voltage", "phase_c_voltage", "avg_phase_voltage",
@@ -23,29 +27,42 @@ EMS_FIELDS = [
     "power_factor", "active_energy_delivered"
 ]
 
-# Machine status thresholds for each machine (power threshold between ON and PRODUCTION states)
-# This can be loaded from a config file or database in a production system
+# Machine status thresholds for each machine
 machine_thresholds = {
-    1: 4.5,
-    2: 1.3,
-    3: 3.8,
-    4: 2.9,
-    5: 2.5,
-    6: 2.3,
-    7: 2.5,
-    8: 1,
-    9: 1,
-    10: 1,
-    11: 1,
-    12: 1.8,
-    13: 2,
-    14: 10,
+    1: 4.5, 2: 1.3, 3: 3.8, 4: 2.9, 5: 2.5,
+    6: 2.3, 7: 2.5, 8: 1, 9: 1, 10: 1,
+    11: 1, 12: 1.8, 13: 2, 14: 10,
+}
+
+# Value map for meter readings
+VALUE_MAP = {
+    "PHASE_A VOLTAGE": "phase_a_voltage",
+    "PHASE_B VOLTAGE": "phase_b_voltage",
+    "PHASE_C VOLTAGE": "phase_c_voltage",
+    "AVERAGE PHASE VOLTAGE": "avg_phase_voltage",
+    "A-B LINE VOLTAGE": "line_ab_voltage",
+    "B-C LINE VOLTAGE": "line_bc_voltage",
+    "C-A LINE VOLTAGE": "line_ca_voltage",
+    "AVERAGE LINE VOLTAGE": "avg_line_voltage",
+    "FREQUENCY": "frequency",
+    "TOTAL INSTANTANEOUS ACTIVE POWER": "total_instantaneous_power",
+    "PHASE_A CURRENT": "phase_a_current",
+    "PHASE_B CURRENT": "phase_b_current",
+    "PHASE_C CURRENT": "phase_c_current",
+    "THREE-PHASE AVERAGE CURRENT": "avg_three_phase_current",
+    "TOTAL POWER FACTOR": "power_factor",
+    "ACTIVE ENERGY 3P DELIVERED": "active_energy_delivered"
 }
 
 
 class DeltaPLCReader:
     def __init__(self, port='', slave_address=1, register_file="config/ems_settings.json"):
-        self.instrument = minimalmodbus.Instrument(port, slave_address)
+        try:
+            self.instrument = minimalmodbus.Instrument(port, slave_address)
+        except Exception as e:
+            logging.error(f"Failed to connect to instrument: {e}")
+            raise
+
         self.instrument.serial.baudrate = 9600
         self.instrument.serial.bytesize = 7
         self.instrument.serial.parity = serial.PARITY_EVEN
@@ -54,18 +71,19 @@ class DeltaPLCReader:
         self.instrument.mode = minimalmodbus.MODE_ASCII
         self.instrument.clear_buffers_before_each_transaction = True
 
-        # Initialize shift time boundaries
         self.shift0 = datetime.combine(self.get_current_time().date(), time(8, 30))
         self.shift1 = datetime.combine(self.get_current_time().date(), time(17, 0))
         self.shift2 = datetime.combine(self.get_current_time().date() + timedelta(days=1), time(0, 30))
 
         self.last_energy_values = {}
-
         self.current_shift = 0
 
-        # Load meter register mappings from JSON file
-        with open(register_file, 'r') as f:
-            self.meters = json.load(f)
+        try:
+            with open(register_file, 'r') as f:
+                self.meters = json.load(f)
+        except Exception as e:
+            logging.error(f"Failed to load meter register config: {e}")
+            raise
 
     def get_current_time(self):
         return datetime.now() + timedelta(hours=5, minutes=30)
@@ -79,7 +97,7 @@ class DeltaPLCReader:
             values = self.instrument.read_registers(modbus_address - 400001, num_registers)
             return values
         except Exception as e:
-            print(f"Error reading registers: {str(e)}")
+            logging.warning(f"Error reading registers from meter {meter_id}: {e}")
             return None
 
     def convert_raw_bytes_to_float(self, reg1, reg2, reg3, reg4):
@@ -87,18 +105,16 @@ class DeltaPLCReader:
             bytes_val = struct.pack('BBBB', reg2, reg1, reg4, reg3)
             return struct.unpack('<f', bytes_val)[0]
         except Exception as e:
-            print(f"Float conversion error: {e}")
+            logging.warning(f"Float conversion error: {e}")
             return None
 
     def read_meter_values(self, meter_id):
         results = []
         if str(meter_id) not in self.meters:
-            print(f"Meter ID {meter_id} not found")
+            logging.warning(f"Meter ID {meter_id} not found in config")
             return results
 
-        meter_data = self.meters[str(meter_id)]
-        print(f"\n\n ")
-        for name, (start_d_number, num_registers) in meter_data.items():
+        for name, (start_d_number, num_registers) in self.meters[str(meter_id)].items():
             values = self.read_multiple_d_registers(meter_id, start_d_number, num_registers)
             if values and len(values) >= 4:
                 if name == "ACTIVE ENERGY 3P DELIVERED":
@@ -106,29 +122,19 @@ class DeltaPLCReader:
                     float_value = round(struct.unpack('<i', bytes_val)[0] / 1000, 4)
                 else:
                     float_value = round(self.convert_raw_bytes_to_float(*values[:4]), 4)
-
                 results.append((name, float_value))
             else:
                 results.append((name, None))
         return results
 
     def check_shift_update(self):
-        """Check if shifts need to be reset based on current time"""
         with db_session:
             temp_time = self.get_current_time()
             shiftwise_data = ShiftwiseEnergyLive.select()[:]
+            temp_bool = any(record.timestamp.date() < temp_time.date() for record in shiftwise_data)
 
-            # Check if any records are from previous days
-            temp_bool = False
-            for record in shiftwise_data:
-                if record.timestamp.date() < temp_time.date():
-                    temp_bool = True
-                    break
-
-            # Reset shifts if it's a new day or any record is from a previous day
             if temp_time >= self.shift0 + timedelta(days=1) or temp_bool:
                 for record in shiftwise_data:
-                    # Save history record before resetting
                     ShiftwiseEnergyHistory(
                         timestamp=self.shift0,
                         machine_id=record.machine_id,
@@ -137,57 +143,42 @@ class DeltaPLCReader:
                         third_shift=record.third_shift,
                         total_energy=record.total_energy
                     )
-
-                    # Reset the live record
                     record.first_shift = 0
                     record.second_shift = 0
                     record.third_shift = 0
                     record.total_energy = 0
                     record.timestamp = self.get_current_time()
 
-                # Update shift boundaries for the new day
                 self.shift0 = datetime.combine(self.get_current_time().date(), time(8, 30))
-                self.shift1 = datetime.combine(self.get_current_time(), time(17, 0))
+                self.shift1 = datetime.combine(self.get_current_time().date(), time(17, 0))
                 self.shift2 = datetime.combine(self.get_current_time().date() + timedelta(days=1), time(0, 30))
 
-                print(f"Shift Reset Successful at {self.get_current_time()}")
+                logging.info(f"Shift Reset Successful at {self.get_current_time()}")
 
     def update_shiftwise_energy(self, machine_id, energy_value):
-        """Update shiftwiser energy based on the current time and energy consumption"""
         with db_session:
             temp_time = self.get_current_time()
-
-            # Get or create shiftwise energy record
             shiftwise_data = ShiftwiseEnergyLive.get(machine_id=machine_id)
             if not shiftwise_data:
-                shiftwise_data = ShiftwiseEnergyLive(
-                    machine_id=machine_id,
-                    timestamp=temp_time,
-                    first_shift=0,
-                    second_shift=0,
-                    third_shift=0,
-                    total_energy=0
-                )
+                shiftwise_data = ShiftwiseEnergyLive(machine_id=machine_id, timestamp=temp_time, first_shift=0,
+                                                     second_shift=0, third_shift=0, total_energy=0)
 
-            # Update the appropriate shift based on current time
-            if temp_time >= self.shift0 and temp_time < self.shift1:        # FIRST SHIFT
+            if self.shift0 <= temp_time < self.shift1:
                 if self.current_shift != 0:
                     self.current_shift = 0
                     self.record_last_energy_values_day()
                 shiftwise_data.first_shift += round(energy_value, 4)
-            elif temp_time >= self.shift1 and temp_time < self.shift2:      # SECOND SHIFT
+            elif self.shift1 <= temp_time < self.shift2:
                 if self.current_shift != 1:
                     self.current_shift = 1
                     self.record_last_energy_values()
                 shiftwise_data.second_shift += round(energy_value, 4)
-            else:                                                           # THIRD SHIFT
+            else:
                 if self.current_shift != 2:
                     self.current_shift = 2
                     self.record_last_energy_values()
-                    self.record_last_energy_values()
                 shiftwise_data.third_shift += round(energy_value, 4)
 
-            # Update total energy and timestamp
             shiftwise_data.total_energy = round(
                 shiftwise_data.first_shift + shiftwise_data.second_shift + shiftwise_data.third_shift, 4
             )
@@ -195,89 +186,52 @@ class DeltaPLCReader:
 
     @db_session
     def record_last_energy_values_day(self):
-        meters_to_read = list(map(int, self.meters.keys()))
-        for machine_id in meters_to_read:
-            past_shiftwise_data = ShiftwiseEnergyHistory.select(machine_id=machine_id).order_by(desc(ShiftwiseEnergyHistory.timestamp)).first()
-            self.last_energy_values[machine_id] = past_shiftwise_data.total_energy
+        for machine_id in map(int, self.meters.keys()):
+            past_shiftwise_data = ShiftwiseEnergyHistory.select(lambda h: h.machine_id == machine_id)
+            latest = past_shiftwise_data.order_by(desc(ShiftwiseEnergyHistory.timestamp)).first()
+            if latest:
+                self.last_energy_values[machine_id] = latest.total_energy
 
     @db_session
     def record_last_energy_values(self):
-        meters_to_read = list(map(int, self.meters.keys()))
-        for machine_id in meters_to_read:
+        for machine_id in map(int, self.meters.keys()):
             shiftwise_data = ShiftwiseEnergyLive.get(machine_id=machine_id)
-            past_shiftwise_data = ShiftwiseEnergyHistory.select(machine_id=1).order_by(desc(ShiftwiseEnergyHistory.timestamp)).first()
-            self.last_energy_values[machine_id] = shiftwise_data.first_shift + shiftwise_data.second_shift + past_shiftwise_data.total_energy
+            past_shiftwise_data = ShiftwiseEnergyHistory.select(lambda h: h.machine_id == machine_id)
+            latest = past_shiftwise_data.order_by(desc(ShiftwiseEnergyHistory.timestamp)).first()
+            if shiftwise_data and latest:
+                self.last_energy_values[
+                    machine_id] = shiftwise_data.first_shift + shiftwise_data.second_shift + latest.total_energy
 
     @db_session
     def save_to_db(self, meter_id, readings):
-        # Check if shift needs to be updated
         self.check_shift_update()
-
         timestamp = self.get_current_time()
-        value_map = {
-            "PHASE_A VOLTAGE": "phase_a_voltage",
-            "PHASE_B VOLTAGE": "phase_b_voltage",
-            "PHASE_C VOLTAGE": "phase_c_voltage",
-            "AVERAGE PHASE VOLTAGE": "avg_phase_voltage",
-            "A-B LINE VOLTAGE": "line_ab_voltage",
-            "B-C LINE VOLTAGE": "line_bc_voltage",
-            "C-A LINE VOLTAGE": "line_ca_voltage",
-            "AVERAGE LINE VOLTAGE": "avg_line_voltage",
-            "FREQUENCY": "frequency",
-            "TOTAL INSTANTANEOUS ACTIVE POWER": "total_instantaneous_power",
-            "PHASE_A CURRENT": "phase_a_current",
-            "PHASE_B CURRENT": "phase_b_current",
-            "PHASE_C CURRENT": "phase_c_current",
-            "THREE-PHASE AVERAGE CURRENT": "avg_three_phase_current",
-            "TOTAL POWER FACTOR": "power_factor",
-            "ACTIVE ENERGY 3P DELIVERED": "active_energy_delivered"
-        }
+        data = {VALUE_MAP[k]: v for k, v in readings if k in VALUE_MAP}
 
-        data = {value_map[k]: v for k, v in readings if k in value_map}
-
-        # Default threshold if machine ID not in dictionary
         default_threshold = 5.0
-
-        # Determine machine status based on power consumption
-        machine_status = 0  # Default: OFF
+        machine_status = 0
 
         if "total_instantaneous_power" in data and data["total_instantaneous_power"] is not None:
             power = data["total_instantaneous_power"]
             threshold = machine_thresholds.get(meter_id, default_threshold)
 
-            # if power == 0:
-            #     machine_status = 0  # OFF
-            # elif power < threshold:
-            #     machine_status = 1  # ON
-            # else:
-            #     machine_status = 2  # PRODUCTION
-
             if abs(power) > threshold:
                 machine_status = 2
-            elif data['frequency'] > 0:
+            elif data.get('frequency', 0) > 0:
                 machine_status = 1
-            else:
-                machine_status = 0
 
-            # Handle shiftwise energy using delta of cumulative energy meter
-            if "active_energy_delivered" in data and data["active_energy_delivered"] is not None:
+            if "active_energy_delivered" in data:
                 current_energy = data["active_energy_delivered"]
                 last_energy = self.last_energy_values.get(meter_id)
-
                 if last_energy is not None:
                     delta_energy = round(current_energy - last_energy, 4)
-                    if delta_energy >= 0:  # Ensure no backward roll (or reset)
+                    if delta_energy >= 0:
                         self.update_shiftwise_energy(meter_id, delta_energy)
+                    else:
+                        logging.warning(f"Meter {meter_id} energy reset or invalid delta: {delta_energy}")
+                self.last_energy_values[meter_id] = current_energy
 
-                # self.last_energy_values[meter_id] = current_energy
-
-        # Add machine_status to data dictionary
-        # data["status"] = machine_status
-
-        # Create history record
         MachineEMSHistory(machine_id=meter_id, timestamp=timestamp, **data)
-
-        # Update or create live record
         live = MachineEMSLive.get(machine_id=meter_id)
         status_changed = False
 
@@ -290,7 +244,7 @@ class DeltaPLCReader:
                 setattr(live, key, value)
         else:
             MachineEMSLive(machine_id=meter_id, timestamp=timestamp, status=machine_status, **data)
-            status_changed = True  # New record = status change
+            status_changed = True
 
         if meter_id not in [1, 2, 3, 5]:
             active_signal = MachineRawLive.get(machine_id=meter_id)
@@ -308,27 +262,18 @@ class DeltaPLCReader:
                     machine_id=meter_id,
                     op_mode=-1,
                     prog_status=-1,
-                    status=0,
+                    status=machine_status,
                     part_count=0,
                     selected_program='',
                     active_program=''
                 )
-
             ShiftManager.manage_shift_summary(timestamp, meter_id)
 
         if status_changed:
-            print(f"MACHINE {meter_id} >> {machine_status} | (0=OFF, 1=ON, 2=PRODUCTION)")
-
             EMSMachineStatusHistory(machine_id=meter_id, status=machine_status, timestamp=timestamp)
-
             if meter_id not in [1, 2, 3, 5]:
-                MachineRaw(
-                    timestamp=timestamp,
-                    machine_id=meter_id,
-                    op_mode=-1,
-                    status=machine_status
-                )
-        print(f"Database Saved {meter_id}")
+                MachineRaw(timestamp=timestamp, machine_id=meter_id, op_mode=-1, status=machine_status)
+        logging.info(f"Saved meter {meter_id} | Status: {machine_status}")
         commit()
 
     def read_continuously(self, interval=5.0, meters_to_read=None):
@@ -342,25 +287,22 @@ class DeltaPLCReader:
                         readings = self.read_meter_values(meter_id)
                         if any(val is not None for _, val in readings):
                             self.save_to_db(meter_id, readings)
-                            print(f"Saved meter {meter_id} readings at {self.get_current_time()}")
-
                         else:
-                            print(f"No valid data for meter {meter_id}")
+                            logging.warning(f"No valid data for meter {meter_id}")
                             if meter_id not in [1, 2, 3, 5]:
                                 DatabaseManager.handle_disconnection(meter_id)
                     except Exception as e:
-                        print(f"Error processing meter {meter_id}: {e}")
-                # tt.sleep(interval)
+                        logging.error(f"Error processing meter {meter_id}: {e}")
+                tt.sleep(interval)
         except KeyboardInterrupt:
-            print("Monitoring stopped by user")
+            logging.info("Monitoring stopped by user")
 
 
 def main():
     load_dotenv()
     connect_to_db()
-
-    plc = DeltaPLCReader(port="/dev/ttyUSB0")
-    # plc = DeltaPLCReader(port="COM5")
+    port = os.getenv("PLC_PORT", "/dev/ttyUSB0")
+    plc = DeltaPLCReader(port=port)
     plc.read_continuously(interval=0.1, meters_to_read=[i for i in range(1, 15)])
 
 

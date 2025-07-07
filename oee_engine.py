@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, date, timedelta, time
 
 from pony.orm import db_session, select, commit
@@ -68,31 +69,39 @@ try:
                     production_log = select(i for i in ProductionLog
                                             if i.machine_id == shift_summary.machine_id
                                             and i.start_time >= shift_start_dt and i.end_time <= shift_end_dt)
+                    if machine_schedule_1:
+                        actual_quantity = sum(
+                            [i.quantity_completed for i in production_log if i.operation == machine_schedule_1[0].operation_id])
 
-                    actual_quantity = sum(
-                        [i.quantity_completed for i in production_log if i.operation == machine_schedule_1[0].operation_id])
-
-                    total_parts = actual_quantity
-                    good_parts = actual_quantity - sum(
-                        [i.quantity_rejected for i in production_log if i.operation == machine_schedule_1[0].operation_id])
+                        total_parts = actual_quantity
+                        good_parts = actual_quantity - sum(
+                            [i.quantity_rejected for i in production_log if i.operation == machine_schedule_1[0].operation_id])
 
                     if planned_production_time:
                         availability = actual_production_time / planned_production_time
-                        availability = min(1, availability)
+                        availability = min(1.0, availability)
                     else:
                         availability = 0
 
                     if expected_quantity:
                         performance = actual_quantity / expected_quantity
-                        performance = min(1, performance)
+
+                        if availability > 0 and performance > 0:
+                            performance = min(1.0, performance)
+                        else:
+                            performance = 1
                     else:
-                        performance = 0
+                        performance = 1
 
                     if total_parts:
                         quality = good_parts / total_parts
-                        quality = min(1, quality)
+
+                        if availability > 0 and quality > 0:
+                            quality = min(1.0, quality)
+                        else:
+                            quality = 1
                     else:
-                        quality = 0
+                        quality = 1
 
                     oee = availability * performance * quality
                     # print(availability, performance, quality)

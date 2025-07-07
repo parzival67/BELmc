@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timedelta, time
 
 from dotenv import load_dotenv
-from pony.orm import db_session, commit
+from pony.orm import db_session, commit, desc
 from app.database.connection import connect_to_db
 from app.models.ems import MachineEMSLive, MachineEMSHistory, ShiftwiseEnergyLive, ShiftwiseEnergyHistory, \
     EMSMachineStatusHistory
@@ -26,11 +26,11 @@ EMS_FIELDS = [
 # Machine status thresholds for each machine (power threshold between ON and PRODUCTION states)
 # This can be loaded from a config file or database in a production system
 machine_thresholds = {
-    1: 2.3,
+    1: 4.5,
     2: 1.3,
-    3: 4.3,
+    3: 3.8,
     4: 2.9,
-    5: 0,
+    5: 2.5,
     6: 2.3,
     7: 2.5,
     8: 1,
@@ -39,7 +39,7 @@ machine_thresholds = {
     11: 1,
     12: 1.8,
     13: 2,
-    14: 3,
+    14: 10,
 }
 
 
@@ -58,6 +58,10 @@ class DeltaPLCReader:
         self.shift0 = datetime.combine(self.get_current_time().date(), time(8, 30))
         self.shift1 = datetime.combine(self.get_current_time().date(), time(17, 0))
         self.shift2 = datetime.combine(self.get_current_time().date() + timedelta(days=1), time(0, 30))
+
+        self.last_energy_values = {}
+
+        self.current_shift = 0
 
         # Load meter register mappings from JSON file
         with open(register_file, 'r') as f:
@@ -93,6 +97,7 @@ class DeltaPLCReader:
             return results
 
         meter_data = self.meters[str(meter_id)]
+        print(f"\n\n ")
         for name, (start_d_number, num_registers) in meter_data.items():
             values = self.read_multiple_d_registers(meter_id, start_d_number, num_registers)
             if values and len(values) >= 4:
@@ -165,11 +170,21 @@ class DeltaPLCReader:
                 )
 
             # Update the appropriate shift based on current time
-            if temp_time >= self.shift0 and temp_time < self.shift1:
+            if temp_time >= self.shift0 and temp_time < self.shift1:        # FIRST SHIFT
+                if self.current_shift != 0:
+                    self.current_shift = 0
+                    self.record_last_energy_values_day()
                 shiftwise_data.first_shift += round(energy_value, 4)
-            elif temp_time >= self.shift1 and temp_time < self.shift2:
+            elif temp_time >= self.shift1 and temp_time < self.shift2:      # SECOND SHIFT
+                if self.current_shift != 1:
+                    self.current_shift = 1
+                    self.record_last_energy_values()
                 shiftwise_data.second_shift += round(energy_value, 4)
-            else:  # Third shift
+            else:                                                           # THIRD SHIFT
+                if self.current_shift != 2:
+                    self.current_shift = 3
+                    self.record_last_energy_values()
+                    self.record_last_energy_values()
                 shiftwise_data.third_shift += round(energy_value, 4)
 
             # Update total energy and timestamp
@@ -177,6 +192,21 @@ class DeltaPLCReader:
                 shiftwise_data.first_shift + shiftwise_data.second_shift + shiftwise_data.third_shift, 4
             )
             shiftwise_data.timestamp = temp_time
+
+    @db_session
+    def record_last_energy_values_day(self):
+        meters_to_read = list(map(int, self.meters.keys()))
+        for machine_id in meters_to_read:
+            past_shiftwise_data = ShiftwiseEnergyHistory.select(machine_id=1).order_by(desc(ShiftwiseEnergyHistory.timestamp)).first()
+            self.last_energy_values[machine_id] = past_shiftwise_data.total_energy
+
+    @db_session
+    def record_last_energy_values(self):
+        meters_to_read = list(map(int, self.meters.keys()))
+        for machine_id in meters_to_read:
+            shiftwise_data = ShiftwiseEnergyLive.get(machine_id=machine_id)
+            past_shiftwise_data = ShiftwiseEnergyHistory.select(machine_id=1).order_by(desc(ShiftwiseEnergyHistory.timestamp)).first()
+            self.last_energy_values[machine_id] = shiftwise_data.first_shift + shiftwise_data.second_shift + past_shiftwise_data.total_energy
 
     @db_session
     def save_to_db(self, meter_id, readings):
@@ -215,20 +245,31 @@ class DeltaPLCReader:
             power = data["total_instantaneous_power"]
             threshold = machine_thresholds.get(meter_id, default_threshold)
 
-            if power == 0 or power < 0.1:  # Using a small threshold to account for measurement noise
-                machine_status = 0  # OFF
-            elif power < threshold:
-                machine_status = 1  # ON
+            # if power == 0:
+            #     machine_status = 0  # OFF
+            # elif power < threshold:
+            #     machine_status = 1  # ON
+            # else:
+            #     machine_status = 2  # PRODUCTION
+
+            if abs(power) > threshold:
+                machine_status = 2
+            elif data['frequency'] > 0:
+                machine_status = 1
             else:
-                machine_status = 2  # PRODUCTION
+                machine_status = 0
 
-            # Calculate energy in kWh: power (kW) * interval (seconds) / 3600 seconds/hour
-            # Assuming readings are taken at the interval specified in read_continuously
-            interval_seconds = 1.0  # Default interval from main function
-            energy_value = round(power * interval_seconds / 3600, 4)
+            # Handle shiftwise energy using delta of cumulative energy meter
+            if "active_energy_delivered" in data and data["active_energy_delivered"] is not None:
+                current_energy = data["active_energy_delivered"]
+                last_energy = self.last_energy_values.get(meter_id)
 
-            # Update shiftwise energy data
-            self.update_shiftwise_energy(meter_id, energy_value)
+                if last_energy is not None:
+                    delta_energy = round(current_energy - last_energy, 4)
+                    if delta_energy >= 0:  # Ensure no backward roll (or reset)
+                        self.update_shiftwise_energy(meter_id, delta_energy)
+
+                # self.last_energy_values[meter_id] = current_energy
 
         # Add machine_status to data dictionary
         # data["status"] = machine_status
@@ -251,7 +292,7 @@ class DeltaPLCReader:
             MachineEMSLive(machine_id=meter_id, timestamp=timestamp, status=machine_status, **data)
             status_changed = True  # New record = status change
 
-        if meter_id not in [1, 2, 3, 5, 14]:
+        if meter_id not in [1, 2, 3, 5]:
             active_signal = MachineRawLive.get(machine_id=meter_id)
             if active_signal:
                 active_signal.timestamp = timestamp
@@ -280,14 +321,14 @@ class DeltaPLCReader:
 
             EMSMachineStatusHistory(machine_id=meter_id, status=machine_status, timestamp=timestamp)
 
-            if meter_id not in [1, 2, 3, 5, 14]:
+            if meter_id not in [1, 2, 3, 5]:
                 MachineRaw(
                     timestamp=timestamp,
                     machine_id=meter_id,
                     op_mode=-1,
                     status=machine_status
                 )
-
+        print(f"Database Saved {meter_id}")
         commit()
 
     def read_continuously(self, interval=5.0, meters_to_read=None):
@@ -301,11 +342,11 @@ class DeltaPLCReader:
                         readings = self.read_meter_values(meter_id)
                         if any(val is not None for _, val in readings):
                             self.save_to_db(meter_id, readings)
-                            # print(f"Saved meter {meter_id} readings at {self.get_current_time()}")
+                            print(f"Saved meter {meter_id} readings at {self.get_current_time()}")
 
                         else:
                             print(f"No valid data for meter {meter_id}")
-                            if meter_id not in [1, 2, 3, 5, 14]:
+                            if meter_id not in [1, 2, 3, 5]:
                                 DatabaseManager.handle_disconnection(meter_id)
                     except Exception as e:
                         print(f"Error processing meter {meter_id}: {e}")

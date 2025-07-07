@@ -4,18 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="13.05.2025 update">
-      <change afterPath="$PROJECT_DIR$/notification_engine.py" afterDir="false" />
+    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="15.05.2025 update&#10;added notification_engine">
       <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/database/connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/connection.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/inventoryv1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventoryv1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/logs.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/master_order.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/master_order.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/production.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/collector_ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_ems.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/oee_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/oee_engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_opcua.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_opcua.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/lsv2_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/lsv2_settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/opcua_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/opcua_settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/notification_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/notification_engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -48,26 +46,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ASKED_ADD_EXTERNAL_FILES": "true",
-    "Python.collector_ems_temp.executor": "Run",
-    "Python.collector_lsv2 (1).executor": "Run",
-    "Python.collector_lsv2_temp.executor": "Run",
-    "Python.collector_opcua (1).executor": "Run",
-    "Python.collector_opcua.executor": "Run",
-    "Python.collector_opcua_temp.executor": "Run",
-    "Python.notification_engine.executor": "Run",
-    "Python.oee_engine.executor": "Run",
-    "Python.scratch.executor": "Run",
-    "Python.scratch1.executor": "Run",
-    "Python.scratch_1.executor": "Run",
-    "Python.tesst_opcua.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "D:/codes/BELmc/app/config"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python.collector_ems_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_lsv2 (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_lsv2_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_opcua (1).executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_opcua.executor&quot;: &quot;Run&quot;,
+    &quot;Python.collector_opcua_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.notification_engine.executor&quot;: &quot;Run&quot;,
+    &quot;Python.oee_engine.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.tesst_opcua.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/codes/BELmc/app/config&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\codes\BELmc\app\config" />
@@ -78,7 +76,7 @@
       <recent name="D:\codes\BELmc" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.notification_engine">
+  <component name="RunManager" selected="Python.tesst_opcua">
     <configuration name="collector_lsv2 (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
@@ -167,7 +165,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="scratch1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="tesst_opcua" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -180,7 +178,7 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch1.py" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/tesst_opcua.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -191,11 +189,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.tesst_opcua" />
+        <item itemvalue="Python.collector_opcua (1)" />
         <item itemvalue="Python.notification_engine" />
         <item itemvalue="Python.oee_engine" />
-        <item itemvalue="Python.collector_opcua (1)" />
         <item itemvalue="Python.collector_lsv2 (1)" />
-        <item itemvalue="Python.scratch1" />
       </list>
     </recent_temporary>
   </component>
@@ -295,7 +293,15 @@
       <option name="project" value="LOCAL" />
       <updated>1747111083914</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="15.05.2025 update&#10;added notification_engine">
+      <option name="closed" value="true" />
+      <created>1747297367206</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1747297367206</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -321,7 +327,8 @@
     <MESSAGE value="may update" />
     <MESSAGE value="12.05.2025 update" />
     <MESSAGE value="13.05.2025 update" />
-    <option name="LAST_COMMIT_MESSAGE" value="13.05.2025 update" />
+    <MESSAGE value="15.05.2025 update&#10;added notification_engine" />
+    <option name="LAST_COMMIT_MESSAGE" value="15.05.2025 update&#10;added notification_engine" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

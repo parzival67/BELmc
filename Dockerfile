@@ -6,4 +6,4 @@ COPY . /BELmc
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "collector_opcua.py"]
+CMD ["python", "collector_ems.py"]

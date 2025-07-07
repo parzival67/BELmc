@@ -153,6 +153,8 @@ class MachineMonitor:
                 password=self.config['password']
             )
 
+            # self.opcua_client.client.set_security_string("None,None,None,None")
+
             # Create data collector
             self.data_collector = MachineDataCollector(
                 self.machine_id,

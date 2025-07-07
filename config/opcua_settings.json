@@ -2,11 +2,11 @@
   "opcua": [
     {
       "machine_id": 14,
-      "machine_name": "abc",
-      "ip_address": "172.18.28.35",
+      "machine_name": "CTX Beta 1250TC4A",
+      "ip_address": "172.16.0.131",
       "port": "4840",
       "username": "OpcUaClient",
-      "password": "SUNRISE1234",
+      "password": "FabC*0107",
       "node_mapping": {
           "operation_mode": "ns=2;s=/Bag/State/opMode",
           "program_status": "ns=2;s=/Channel/State/progStatus",

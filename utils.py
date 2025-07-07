@@ -151,8 +151,8 @@ class DatabaseManager:
                     part_status=part_status,
                     selected_program=selected_program,
                     active_program=active_program,
-                    scheduled_job=machine_raw_latest.scheduled_job,
-                    actual_job=machine_raw_latest.actual_job
+                    scheduled_job=active_signal.scheduled_job,
+                    actual_job=active_signal.actual_job
                 )
 
                 print(f'STATUS CHANGE => {timestamp} >> '

@@ -26,9 +26,9 @@ class DatabaseManager:
             StatusLookup(status_id=2, status_name='PRODUCTION')
 
         if ShiftInfo.select().count() == 0:
-            ShiftInfo(start_time=time_obj(9, 0), end_time=time_obj(17, 0))
-            ShiftInfo(start_time=time_obj(17, 0), end_time=time_obj(1, 0))
-            ShiftInfo(start_time=time_obj(1, 0), end_time=time_obj(9, 0))
+            ShiftInfo(start_time=time_obj(6, 0), end_time=time_obj(14, 0))
+            ShiftInfo(start_time=time_obj(14, 0), end_time=time_obj(22, 0))
+            ShiftInfo(start_time=time_obj(22, 0), end_time=time_obj(6, 0))
 
         if ConfigInfo.select().count() == 0:
             [ConfigInfo(machine_id=i, shift_duration=480, planned_non_production_time=40, planned_downtime=40)
@@ -61,7 +61,7 @@ class DatabaseManager:
 
         current_time = datetime.now() + timedelta(hours=5, minutes=30)
         if (not recent_status) or recent_status.status.status_id != 0:
-            print('yeet', recent_status.status.status_id)
+            print(f"{current_time} [DISCONNECTION] | Machine ID > {machine_id} | Past State > {recent_status.status.status_id}")
             MachineRaw(
                 timestamp=current_time,
                 machine_id=machine_id,

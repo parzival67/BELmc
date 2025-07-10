@@ -21,7 +21,9 @@ try:
                 # timestamp = datetime.now()
                 shift_id, shift_start_time, shift_end_time = ShiftManager.get_current_shift(timestamp)
 
-                if shift_start_time < shift_end_time:
+                print(shift_id, shift_start_time, shift_end_time)
+
+                if shift_start_time > shift_end_time:
                     shift_start_dt = datetime.combine(timestamp.date(), shift_start_time)
                     shift_end_dt = datetime.combine(timestamp.date() + timedelta(days=1), shift_end_time)
                 else:
@@ -59,6 +61,9 @@ try:
                                                                          shift_end_dt + timedelta(days=1))
 
                     expected_quantity = 0
+                    total_parts = 0
+                    good_parts = 0
+
                     if machine_schedule_1:
                         if machine_schedule_2:
                             expected_quantity = machine_schedule_1[0].remaining_quantity - machine_schedule_2[
@@ -119,8 +124,8 @@ try:
                     shift_summary.performance_loss = 100 - shift_summary.performance
                     shift_summary.quality_loss = 100 - shift_summary.quality
 
-                    shift_summary.oee = oee * 100
-
+                    # shift_summary.oee = oee * 100
+                    print(shift_summary.availability, shift_summary.performance, shift_summary.quality, shift_summary.oee)
                     commit()
 
         except Exception as e:

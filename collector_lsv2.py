@@ -48,13 +48,12 @@ class LSV2Client:
         if not self.client:
             return False
         try:
-            # Try to query something to check connection
             self.client.execution_state()
             return True
         except Exception:
             return False
 
-    def get_machine_data(self):
+    def get_machine_data(self, machine_id):
         """Get machine data via LSV2 protocol"""
         try:
             if not self.client:
@@ -79,11 +78,11 @@ class LSV2Client:
                 data["selected_program"] = ""
                 data["active_program"] = ""
 
-            # Part count is not available in this implementation
+            # Placeholder for part info
             data["part_count"] = 0
             data["part_status"] = 0
 
-            # Determine machine status based on program status
+            # Determine machine status
             if data["prog_status"] == 0:
                 data["machine_status"] = 2  # Production
             else:
@@ -105,9 +104,12 @@ class MachineMonitor:
         self.clients = {}
         self.running = False
 
-        # Operation intervals in seconds
+        # Operation intervals
         self.poll_interval = 1
         self.retry_delay = 60
+
+        # Stores last known state of program completion for each machine
+        self.previous_states = {}
 
     def load_config(self):
         """Load configuration from JSON file"""
@@ -122,26 +124,23 @@ class MachineMonitor:
     def setup(self):
         """Setup database connection and LSV2 clients"""
         try:
-            # Connect to database
             connect_to_db()
             DatabaseManager.initialize_db()
             print("Database connected successfully")
 
-            # Load configuration
             if not self.load_config():
                 return False
 
-            # Create LSV2 clients for each machine
             for machine_config in self.config:
                 machine_id = machine_config["machine_id"]
                 ip_address = machine_config["ip_address"]
 
-                # Create and store client
                 client = LSV2Client(machine_id, ip_address, safe_mode=False)
                 self.clients[machine_id] = client
-
-                # Attempt initial connection
                 client.connect()
+
+                # Initialize previous state to False
+                self.previous_states[machine_id] = False
 
             return True
         except Exception as e:
@@ -161,19 +160,43 @@ class MachineMonitor:
             while self.running:
                 for machine_id, client in self.clients.items():
                     try:
-                        # Check if connected, if not, try to reconnect
                         if not client.is_connected():
                             if client.connect():
                                 print(f"Reconnected to machine ID: {machine_id}")
                             else:
-                                # Handle disconnection in database
                                 DatabaseManager.handle_disconnection(machine_id)
-                                continue  # Skip this iteration for this machine
+                                continue
 
-                        # Collect data from machine
-                        data = client.get_machine_data()
+                        prev_state = self.previous_states.get(machine_id, False)
+                        current_state = False
 
-                        # Record data to database
+                        try:
+                            # Read PLC memory to check program finished flag
+                            if machine_id in [1, 2, 5]:
+                                current_state = client.client.read_plc_memory(
+                                    4170, pyLSV2.MemoryType.MARKER, 1
+                                )[0]
+                            else:
+                                current_state = client.client.read_plc_memory(2592, pyLSV2.MemoryType.DWORD, 1) == 255
+
+                        except Exception as e:
+                            print(f"Error reading PLC memory for machine {machine_id}: {e}")
+
+                        # Detect rising edge (False -> True)
+                        rising_edge = current_state and not prev_state
+
+                        # Get machine data
+                        data = client.get_machine_data(machine_id)
+
+                        data["part_count"] = 1 if rising_edge else 0
+
+                        # Update previous state (reset on falling edge)
+                        if not current_state:
+                            self.previous_states[machine_id] = False
+                        else:
+                            self.previous_states[machine_id] = True
+
+                        # Record to database
                         DatabaseManager.record_machine_data(machine_id, data)
 
                     except ConnectionError:
@@ -184,7 +207,6 @@ class MachineMonitor:
                         print(f"Error monitoring machine ID: {machine_id}: {e}")
                         DatabaseManager.handle_disconnection(machine_id)
 
-                # Wait before next polling cycle
                 time.sleep(self.poll_interval)
 
         except KeyboardInterrupt:

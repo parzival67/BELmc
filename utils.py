@@ -135,7 +135,7 @@ class DatabaseManager:
                     active_signal.op_mode != operation_mode or
                     active_signal.prog_status != program_status or
                     active_signal.status.status_id != machine_status or
-                    active_signal.part_count != part_count or
+                    active_signal.part_count != machine_raw_latest.part_count or
                     active_signal.selected_program != selected_program or
                     active_signal.active_program != active_program or
                     active_signal.scheduled_job != machine_raw_latest.scheduled_job or
@@ -147,7 +147,7 @@ class DatabaseManager:
                     op_mode=operation_mode,
                     prog_status=program_status,
                     status=machine_status,
-                    part_count=part_count,
+                    part_count=active_signal.part_count,
                     part_status=part_status,
                     selected_program=selected_program,
                     active_program=active_program,
@@ -160,7 +160,7 @@ class DatabaseManager:
                       f'Status: {machine_status} | '
                       f'Operation Mode: {operation_mode} | '
                       f'Program Status: {program_status} | '
-                      f'Part Count: {part_count} | '
+                      f'Part Count: {active_signal.part_count} | '
                       f'Selected Program: {selected_program} | '
                       f'Active Program: {active_program} | ')
 
@@ -170,7 +170,7 @@ class DatabaseManager:
                 active_signal.op_mode = operation_mode
                 active_signal.prog_status = program_status
                 active_signal.status = machine_status
-                active_signal.part_count = part_count
+                active_signal.part_count += part_count
                 active_signal.selected_program = selected_program
                 active_signal.active_program = active_program
             else:

@@ -6,4 +6,4 @@ COPY . /BELmc
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "collector_ems.py"]
+CMD ["python", "collector_lsv2.py"]

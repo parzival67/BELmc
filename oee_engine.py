@@ -17,8 +17,8 @@ try:
     while True:
         try:
             with db_session():
-                timestamp = datetime.now() + timedelta(hours=5, minutes=30)
-                # timestamp = datetime.now()
+                # timestamp = datetime.now() + timedelta(hours=5, minutes=30)
+                timestamp = datetime.now()
                 shift_id, shift_start_time, shift_end_time = ShiftManager.get_current_shift(timestamp)
 
                 print(shift_id, shift_start_time, shift_end_time)
@@ -71,9 +71,17 @@ try:
                         else:
                             expected_quantity = machine_schedule_1[0].remaining_quantity
 
+                        if shift_summary.machine_id == 4:
+                            if expected_quantity < 0:
+                                expected_quantity = machine_schedule_1[0].remaining_quantity
+
                     production_log = select(i for i in ProductionLog
                                             if i.machine_id == shift_summary.machine_id
                                             and i.start_time >= shift_start_dt and i.end_time <= shift_end_dt)
+
+                    if shift_summary.machine_id == 4:
+                        print(production_log[:][0].quantity_completed)
+
                     if machine_schedule_1:
                         actual_quantity = sum(
                             [i.quantity_completed for i in production_log if i.operation == machine_schedule_1[0].operation_id])
@@ -89,6 +97,10 @@ try:
                         availability = 0
 
                     if expected_quantity:
+
+                        if shift_summary.machine_id == 4:
+                            print(expected_quantity)
+
                         performance = actual_quantity / expected_quantity
 
                         if availability > 0 and performance > 0:
@@ -125,7 +137,7 @@ try:
                     shift_summary.quality_loss = 100 - shift_summary.quality
 
                     # shift_summary.oee = oee * 100
-                    print(shift_summary.availability, shift_summary.performance, shift_summary.quality, shift_summary.oee)
+                    # print(shift_summary.availability, shift_summary.performance, shift_summary.quality, shift_summary.oee)
                     commit()
 
         except Exception as e:

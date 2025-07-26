@@ -30,20 +30,20 @@ EMS_FIELDS = [
 
 # Machine status thresholds
 machine_thresholds = {
-    1: 4.5,
-    2: 1.3,
-    3: 3.8,
-    4: 2.9,
-    5: 2.5,
-    6: 2.3,
-    7: 2.5,
-    8: 1,
-    9: 1,
-    10: 1,
-    11: 1,
-    12: 1.8,
-    13: 2,
-    14: 10,
+    1: 4.5,  # DMU60MB
+    2: 1.3,  # DMU50
+    3: 3.8,  # EVO LINEAR
+    4: 2.9,  # DMU60T
+    5: 2.5,  # VCP800W
+    6: 2.3,  # MAKINO
+    7: 2.5,  # ROBOFIL240
+    8: 0.9,  # PILATUS -
+    9: 1,    # SCH110
+    10: 0.3, # SCH125 -
+    11: 1,   # SCH180
+    12: 1.5, # TUR26 -
+    13: 2,   # NU7B -
+    14: 10,  # CTX BETA
 }
 
 MAX_DELTA_ENERGY = 10.0

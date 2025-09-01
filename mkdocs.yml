@@ -1,0 +1,58 @@
+site_name: BELmc Documentation
+site_url: https://example.com/
+site_author: BELmc Development Team
+site_description: Documentation for the BELmc Manufacturing Execution System
+
+repo_name: BELmc/BELmc
+repo_url: https://github.com/your-username/BELmc
+
+copyright: Copyright &copy; 2023 BELmc Development Team
+
+theme:
+  name: material
+  language: en
+  palette:
+    primary: black
+    accent: grey
+  font:
+    text: Noto Sans
+    code: Roboto Mono
+  icon:
+    logo: material/factory
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - meta
+
+nav:
+  - Home: index.md
+  - Collectors: collectors.md
+  - Auxiliary Engines: engines.md
+  - System Workflow: workflow.md
+  - Configuration: configuration.md
+  - Requirements: requirements.md

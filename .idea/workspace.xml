@@ -4,17 +4,69 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="15.05.2025 update&#10;added notification_engine">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py">
+      <change afterPath="$PROJECT_DIR$/docs/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/collectors.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/configuration.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/engines.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/index.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/requirements.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/workflow.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mkdocs.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/404.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/images/favicon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/bundle.081f42fc.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/bundle.081f42fc.min.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ar.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.da.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.de.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.du.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.el.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.es.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.fi.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.fr.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.he.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.hi.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.hu.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.hy.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.it.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ja.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.jp.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.kn.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ko.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.multi.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.nl.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.no.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.pt.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ro.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ru.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.sa.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.stemmer.support.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.sv.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ta.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.te.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.th.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.tr.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.vi.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.zh.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/tinyseg.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/wordcut.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/workers/search.b8dbb3d2.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/workers/search.b8dbb3d2.min.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/main.6543a935.min.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/main.6543a935.min.css.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/palette.06af60db.min.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/palette.06af60db.min.css.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/collectors/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/configuration/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/engines/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/requirements/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/search/search_index.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/sitemap.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/sitemap.xml.gz" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/site/workflow/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/collector_ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_ems.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/collector_opcua.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_opcua.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/lsv2_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/lsv2_settings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/opcua_settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/opcua_settings.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/notification_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/notification_engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -49,6 +101,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
+    &quot;Python.collector_ems.executor&quot;: &quot;Run&quot;,
     &quot;Python.collector_ems_temp.executor&quot;: &quot;Run&quot;,
     &quot;Python.collector_lsv2 (1).executor&quot;: &quot;Run&quot;,
     &quot;Python.collector_lsv2_temp.executor&quot;: &quot;Run&quot;,
@@ -56,14 +109,15 @@
     &quot;Python.collector_opcua.executor&quot;: &quot;Run&quot;,
     &quot;Python.collector_opcua_temp.executor&quot;: &quot;Run&quot;,
     &quot;Python.notification_engine.executor&quot;: &quot;Run&quot;,
-    &quot;Python.oee_engine.executor&quot;: &quot;Run&quot;,
+    &quot;Python.oee_engine.executor&quot;: &quot;Debug&quot;,
     &quot;Python.scratch.executor&quot;: &quot;Run&quot;,
     &quot;Python.scratch1.executor&quot;: &quot;Run&quot;,
     &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
     &quot;Python.tesst_opcua.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/codes/BELmc/app/config&quot;
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/codes/prometrix/prometrix&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -76,7 +130,29 @@
       <recent name="D:\codes\BELmc" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.tesst_opcua">
+  <component name="RunManager" selected="Python.collector_opcua (1)">
+    <configuration name="collector_ems" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BELmc" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_ems.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="collector_lsv2 (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
@@ -113,28 +189,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_opcua.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="notification_engine" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BELmc" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/notification_engine.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -189,11 +243,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.tesst_opcua" />
         <item itemvalue="Python.collector_opcua (1)" />
-        <item itemvalue="Python.notification_engine" />
-        <item itemvalue="Python.oee_engine" />
         <item itemvalue="Python.collector_lsv2 (1)" />
+        <item itemvalue="Python.collector_ems" />
+        <item itemvalue="Python.oee_engine" />
+        <item itemvalue="Python.tesst_opcua" />
       </list>
     </recent_temporary>
   </component>
@@ -301,7 +355,39 @@
       <option name="project" value="LOCAL" />
       <updated>1747297367206</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="july 2025 update (changed ems, opcua)">
+      <option name="closed" value="true" />
+      <created>1751888542203</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1751888542203</updated>
+    </task>
+    <task id="LOCAL-00013" summary="modified oee (performance, quality) for starting from 100%; added optimized collector_ems_1.py (untested)">
+      <option name="closed" value="true" />
+      <created>1751890583747</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1751890583747</updated>
+    </task>
+    <task id="LOCAL-00014" summary="shift update to BEL shifts. changed collector_ems.py to handle disconnection faster. corrected shift changeover logic.">
+      <option name="closed" value="true" />
+      <created>1752151452173</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1752151452173</updated>
+    </task>
+    <task id="LOCAL-00015" summary="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py">
+      <option name="closed" value="true" />
+      <created>1753510249865</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1753510249865</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -328,61 +414,15 @@
     <MESSAGE value="12.05.2025 update" />
     <MESSAGE value="13.05.2025 update" />
     <MESSAGE value="15.05.2025 update&#10;added notification_engine" />
-    <option name="LAST_COMMIT_MESSAGE" value="15.05.2025 update&#10;added notification_engine" />
+    <MESSAGE value="july 2025 update (changed ems, opcua)" />
+    <MESSAGE value="modified oee (performance, quality) for starting from 100%; added optimized collector_ems_1.py (untested)" />
+    <MESSAGE value="shift update to BEL shifts. changed collector_ems.py to handle disconnection faster. corrected shift changeover logic." />
+    <MESSAGE value="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>407</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>410</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>412</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>414</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>420</line>
-          <option name="timeStamp" value="9" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>421</line>
-          <option name="timeStamp" value="10" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>433</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/oee_engine.py</url>
-          <line>20</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/oee_engine.py</url>
-          <line>18</line>
-          <option name="timeStamp" value="19" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/oee_engine.py</url>
-          <line>29</line>
-          <option name="timeStamp" value="21" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/notification_engine.py</url>
           <line>11</line>
@@ -407,6 +447,21 @@
           <url>file://$PROJECT_DIR$/notification_engine.py</url>
           <line>21</line>
           <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/oee_engine.py</url>
+          <line>82</line>
+          <option name="timeStamp" value="45" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/oee_engine.py</url>
+          <line>101</line>
+          <option name="timeStamp" value="46" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/oee_engine.py</url>
+          <line>74</line>
+          <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

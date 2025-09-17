@@ -6,7 +6,7 @@ from pony.orm import db_session, select, commit
 from app.database.connection import connect_to_db
 from app.models import ProductionLog
 from app.models.production import ShiftSummary, MachineRawLive
-from utils import ShiftManager, get_machine_schedule_quantities
+from utils import ShiftManager, get_ideal_cycle_time
 
 import time as tt
 
@@ -17,12 +17,12 @@ try:
     while True:
         try:
             with db_session():
-                # timestamp = datetime.now() + timedelta(hours=5, minutes=30)
                 timestamp = datetime.now()
                 shift_id, shift_start_time, shift_end_time = ShiftManager.get_current_shift(timestamp)
 
                 print(shift_id, shift_start_time, shift_end_time)
 
+                # Handle shifts that cross midnight
                 if shift_start_time > shift_end_time:
                     shift_start_dt = datetime.combine(timestamp.date(), shift_start_time)
                     shift_end_dt = datetime.combine(timestamp.date() + timedelta(days=1), shift_end_time)
@@ -30,99 +30,98 @@ try:
                     shift_start_dt = datetime.combine(timestamp.date(), shift_start_time)
                     shift_end_dt = datetime.combine(timestamp.date(), shift_end_time)
 
-                machine_raw_live = select(i for i in MachineRawLive)
-                for i in machine_raw_live:
-                    machine_schedule_0 = get_machine_schedule_quantities(i.machine_id, shift_start_dt,
-                                                                         shift_end_dt)
-                    if machine_schedule_0:
-                        i.scheduled_job = machine_schedule_0[0].operation_id
-                    else:
-                        i.scheduled_job = None
+                # Update MachineRawLive scheduled job info
+                # machine_raw_live = select(i for i in MachineRawLive)
+                # for i in machine_raw_live:
+                #     machine_schedule = get_machine_schedule_quantities(i.machine_id, shift_start_dt, shift_end_dt)
+                #     i.scheduled_job = machine_schedule[0].operation_id if machine_schedule else None
 
+                # Fetch all shift summaries for this shift
                 shift_summaries = select(s for s in ShiftSummary
                                          if s.shift == shift_id and s.timestamp == shift_start_dt)
 
                 for s in shift_summaries:
                     shift_summary = ShiftSummary[s.id]
-                    planned_production_time = max(
-                        datetime.combine(datetime.today(), shift_summary.idle_time) - timedelta(hours=1),
-                        datetime.combine(datetime.today(), time(0))) - datetime.combine(datetime.today(),
-                                                                                        time(0)) + timedelta(
-                        hours=shift_summary.production_time.hour, minutes=shift_summary.production_time.minute,
-                        seconds=shift_summary.production_time.second)
 
+                    # Actual production time (from summary)
                     actual_production_time = timedelta(
-                        hours=shift_summary.production_time.hour, minutes=shift_summary.production_time.minute,
-                        seconds=shift_summary.production_time.second)
+                        hours=shift_summary.production_time.hour,
+                        minutes=shift_summary.production_time.minute,
+                        seconds=shift_summary.production_time.second
+                    )
+                    
+                    # Planned production time (shift length in seconds)
+                    planned_production_time = max(timedelta(
+                        hours=shift_summary.idle_time.hour,
+                        minutes=shift_summary.idle_time.minute,
+                        seconds=shift_summary.idle_time.second
+                    ) - timedelta(hours=1, minutes=30), timedelta(0)) + actual_production_time
 
-                    machine_schedule_1 = get_machine_schedule_quantities(shift_summary.machine_id, shift_start_dt,
-                                                                         shift_end_dt)
-                    machine_schedule_2 = get_machine_schedule_quantities(shift_summary.machine_id, shift_end_dt,
-                                                                         shift_end_dt + timedelta(days=1))
+                    print(f"PRODUCTION TIME > Planned: {planned_production_time} | Actual: {actual_production_time}")
 
-                    expected_quantity = 0
-                    total_parts = 0
-                    good_parts = 0
-
-                    if machine_schedule_1:
-                        if machine_schedule_2:
-                            expected_quantity = machine_schedule_1[0].remaining_quantity - machine_schedule_2[
-                                0].remaining_quantity
-                        else:
-                            expected_quantity = machine_schedule_1[0].remaining_quantity
-
-                        if shift_summary.machine_id == 4:
-                            if expected_quantity < 0:
-                                expected_quantity = machine_schedule_1[0].remaining_quantity
-
+                    # Get production log entries that overlap the shift window
                     production_log = select(i for i in ProductionLog
                                             if i.machine_id == shift_summary.machine_id
-                                            and i.start_time >= shift_start_dt and i.end_time <= shift_end_dt)
+                                            and i.start_time < shift_end_dt and i.end_time > shift_start_dt)[:]
 
-                    if shift_summary.machine_id == 4:
-                        print(production_log[:][0].quantity_completed)
+                    # Group logs by operation
+                    ops = {}
+                    for log in production_log:
+                        if log.operation.id not in ops:
+                            ops[log.operation.id] = {
+                                "total_parts": 0,
+                                "bad_parts": 0,
+                                "duration": 0  # operating time per op
+                            }
+                        ops[log.operation.id]["total_parts"] += log.quantity_completed or 0
+                        ops[log.operation.id]["bad_parts"] += log.quantity_rejected or 0
+                        if log.start_time and log.end_time:
+                            ops[log.operation.id]["duration"] += (log.end_time - log.start_time).total_seconds()
 
-                    if machine_schedule_1:
-                        actual_quantity = sum(
-                            [i.quantity_completed for i in production_log if i.operation == machine_schedule_1[0].operation_id])
+                    # Aggregate results
+                    total_parts = sum(op["total_parts"] for op in ops.values())
+                    bad_parts = sum(op["bad_parts"] for op in ops.values())
+                    good_parts = total_parts - bad_parts
 
-                        total_parts = actual_quantity
-                        good_parts = actual_quantity - sum(
-                            [i.quantity_rejected for i in production_log if i.operation == machine_schedule_1[0].operation_id])
+                    print(f"PARTS SUMMARY   > Total: {total_parts} | Bad: {bad_parts} | Good: {good_parts}")
 
-                    if planned_production_time:
+                    # --- OEE Metrics ---
+                    
+                    # AVAILABILITY CALCULATION
+                    # A = Operating Time / Planned Production Time
+                    if planned_production_time.total_seconds() > 0:
                         availability = actual_production_time / planned_production_time
                         availability = min(1.0, availability)
                     else:
                         availability = 0
 
-                    if expected_quantity:
+                    # PERFORMANCE CALCULATION
+                    # P = (Ideal Cycle Time × Total Parts) / Operating Time
+                    perf_values = []
+                    for op_id, data in ops.items():
+                        if data["duration"] > 0 and data["total_parts"] > 0:
+                            ict = get_ideal_cycle_time(op_id)  # returns in hours
+                            ict_val = float(ict) * 3600  # convert hours to seconds
+                            duration_val = float(data["duration"])  # operating time already in seconds
+                            perf_op = (ict_val * data["total_parts"]) / duration_val
+                            perf_values.append(min(1.0, perf_op))
+                    performance = sum(perf_values) / len(perf_values) if perf_values else 0
 
-                        if shift_summary.machine_id == 4:
-                            print(expected_quantity)
+                    # QUALITY CALCULATION
+                    # Q = Good Parts / Total Parts
+                    qual_values = []
+                    for op_id, data in ops.items():
+                        if data["total_parts"] > 0:
+                            qual_op = (data["total_parts"] - data["bad_parts"]) / data["total_parts"]
+                            qual_values.append(min(1.0, qual_op))
+                    quality = sum(qual_values) / len(qual_values) if qual_values else 0
 
-                        performance = actual_quantity / expected_quantity
-
-                        if availability > 0 and performance > 0:
-                            performance = min(1.0, performance)
-                        else:
-                            performance = 1
-                    else:
-                        performance = 1
-
-                    if total_parts:
-                        quality = good_parts / total_parts
-
-                        if availability > 0 and quality > 0:
-                            quality = min(1.0, quality)
-                        else:
-                            quality = 1
-                    else:
-                        quality = 1
-
+                    print(f"OEE VALUES      > A: {round(availability * 100, 2)} | P: {round(performance * 100, 2)} | Q: {round(quality * 100, 2)}")
+                    # OEE
                     oee = availability * performance * quality
-                    # print(availability, performance, quality)
+                    print(f"\nOEE             > {round(oee * 100, 2)}\n{'-' * 70}")
 
+                    # Update shift summary fields
                     shift_summary.total_parts = total_parts
                     shift_summary.good_parts = good_parts
                     shift_summary.bad_parts = total_parts - good_parts
@@ -136,15 +135,12 @@ try:
                     shift_summary.performance_loss = 100 - shift_summary.performance
                     shift_summary.quality_loss = 100 - shift_summary.quality
 
-                    # shift_summary.oee = oee * 100
-                    # print(shift_summary.availability, shift_summary.performance, shift_summary.quality, shift_summary.oee)
                     commit()
 
         except Exception as e:
             print(e)
 
-        tt.sleep(5)
-
+        tt.sleep(10)
 
 except Exception as e:
     print(f"Setup error: {e}")

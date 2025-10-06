@@ -2,14 +2,15 @@ from fastapi import APIRouter, HTTPException, Depends, Path, Query
 from typing import Any, List
 import os
 import subprocess
-from pony.orm import db_session, commit, flush, select
+from pony.orm import db_session, commit, flush, select, desc
 
 from app.core.security import get_current_user
 from app.models import Operation, Order, User
 from app.schemas.quality import MasterBocCreate, MasterBocResponse, StageInspectionResponse, \
     StageInspectionCreate, QualityInspectionResponse, DetailedQualityInspectionResponse, \
     OrderIPIDResponse, MasterBocIPIDInfo, MeasurementInstrumentsResponse, \
-    ConnectivityCreate, ConnectivityResponse, StageInspectionDetail, FTPResponse
+    ConnectivityCreate, ConnectivityResponse, StageInspectionDetail, FTPResponse, \
+    StageInspectionWithUserResponse, OperatorInfo
 from app.crud.quality import MasterBocCRUD, StageInspectionCRUD, QualityInspectionCRUD, FTPCRUD
 from app.models.quality import Connectivity, StageInspection
 from app.models.inventoryv1 import InventoryItem
@@ -28,7 +29,29 @@ async def create_master_boc(
         data: MasterBocCreate,
         current_user=Depends(get_current_user)
 ) -> Any:
-    """Create a new Master BOC entry"""
+    """
+    Create a new Master BOC entry
+
+    The bbox field must contain exactly 8 values representing the coordinates:
+    [x1, y1, x2, y2, x3, y3, x4, y4]
+
+    Example request body:
+    ```json
+    {
+        "order_id": 1,
+        "document_id": 1,
+        "nominal": "10.5",
+        "uppertol": 0.1,
+        "lowertol": -0.1,
+        "zone": "A",
+        "dimension_type": "diameter",
+        "measured_instrument": "caliper",
+        "op_no": 10,
+        "bbox": [100.0, 200.0, 300.0, 200.0, 300.0, 400.0, 100.0, 400.0],
+        "ipid": "IP123"
+    }
+    ```
+    """
     try:
         print(f"Received bbox data: {data.bbox}")  # Debug log
         master_boc = MasterBocCRUD.create_master_boc(data)
@@ -118,8 +141,12 @@ async def create_stage_inspection(
     Create a new Stage Inspection entry
 
     This endpoint enforces the following validation rules:
-    - If creating a quantity > 1, the first quantity must exist and be marked as done
-    - Each subsequent quantity can only be added if the previous one is marked as done
+    - For quantity 1: Creates FTP status entries for all related IPIDs (initially set to not completed)
+    - For quantity > 1: Verifies that quantity 1 exists
+    - For quantity > 1: Verifies that FTP approval is completed for quantity 1
+
+    You will receive an error if you attempt to create quantities > 1 before
+    FTP approval for quantity 1 is completed.
     """
     try:
         stage_inspection = StageInspectionCRUD.create_stage_inspection(data)
@@ -139,21 +166,20 @@ async def create_stage_inspection(
 @router.patch(
     "/stage-inspection/{inspection_id}/status",
     response_model=StageInspectionResponse,
-    summary="Update the completion status of a stage inspection"
+    summary="Update the FTP status for a stage inspection"
 )
 async def update_inspection_status(
         inspection_id: int = Path(..., gt=0, description="Stage inspection ID"),
-        is_done: bool = Query(..., description="New status (true = done, false = not done)"),
+        is_completed: bool = Query(..., description="Completion status for FTP"),
         current_user=Depends(get_current_user)
 ) -> Any:
     """
-    Update the completion status (is_done) of a stage inspection.
+    Update the FTP completion status for a stage inspection.
 
-    This allows marking an inspection as completed, which is required before
-    subsequent quantities for the same order and operation can be added.
+    This endpoint updates FTP status for related IPIDs based on the inspection.
     """
     try:
-        updated_inspection = StageInspectionCRUD.update_inspection_status(inspection_id, is_done)
+        updated_inspection = StageInspectionCRUD.update_inspection_status(inspection_id, is_completed)
         return updated_inspection
     except ValueError as e:
         raise HTTPException(
@@ -200,7 +226,7 @@ async def get_detailed_quality_inspection(
     summary="Get stage inspection data grouped by operation number"
 )
 @db_session
-async def get_stage_inspection_grouped(
+def get_stage_inspection_grouped(
         order_id: int = Path(..., gt=0),
         current_user=Depends(get_current_user)
 ) -> Any:
@@ -261,6 +287,7 @@ async def get_stage_inspection_grouped(
                                 measured_3=si.measured_3,
                                 measured_mean=si.measured_mean,
                                 measured_instrument=si.measured_instrument,
+                                used_inst=si.used_inst,
                                 is_done=si.is_done,
                                 quantity_no=si.quantity_no,
                                 created_at=si.created_at,
@@ -276,13 +303,16 @@ async def get_stage_inspection_grouped(
                         )
                     )
 
-        return DetailedQualityInspectionResponse(
+        # Create and return the response
+        response = DetailedQualityInspectionResponse(
             order_id=order.id,
             production_order=order.production_order,
             part_number=order.part_number,
-            operations=operation_numbers,  # All operation numbers
-            inspection_data=inspection_groups  # Only operations with inspections
+            operations=operation_numbers,
+            inspection_data=inspection_groups
         )
+
+        return response
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -396,7 +426,7 @@ def create_connectivity(
 @router.get(
     "/connectivity/instrument/{instrument_name}",
     response_model=ConnectivityResponse,
-    summary="Get connectivity information by instrument name"
+    summary="Get most recent connectivity information by instrument name"
 )
 @db_session
 def get_connectivity_by_instrument(
@@ -404,13 +434,13 @@ def get_connectivity_by_instrument(
         current_user=Depends(get_current_user)
 ) -> Any:
     """
-    Get connectivity information for a specific instrument by its name.
+    Get the most recent connectivity information for a specific instrument by its name.
 
     Parameters:
     - instrument_name: Name of the instrument to search for
 
     Returns:
-    - Connectivity information including address and UUID
+    - Most recent connectivity information including address and UUID
 
     Example response:
     ```json
@@ -425,8 +455,9 @@ def get_connectivity_by_instrument(
     ```
     """
     try:
-        # Query the connectivity record by instrument name
-        connectivity = select(c for c in Connectivity if c.instrument == instrument_name).first()
+        # Query the most recent connectivity record by instrument name
+        connectivity = select(c for c in Connectivity if c.instrument == instrument_name).order_by(
+            lambda c: desc(c.created_at)).first()
 
         if not connectivity:
             raise HTTPException(
@@ -467,7 +498,9 @@ async def update_ftp_status(
 ) -> Any:
     """
     Update the FTP status for a given order_id and IPID.
-    The status is determined by checking if all stage inspections for the IPID are marked as done.
+
+    This endpoint explicitly sets the FTP status to completed (is_completed=true).
+    FTP status must be completed before adding quantities > 1.
     """
     try:
         ftp_status = FTPCRUD.update_ftp_status(order_id, ipid)
@@ -530,5 +563,88 @@ async def get_all_ftp_by_order(
         raise HTTPException(
             status_code=500,
             detail=f"Error retrieving FTP statuses: {str(e)}"
+        )
+
+
+@router.get(
+    "/stage-inspection/filter",
+    response_model=List[StageInspectionWithUserResponse],
+    summary="Get stage inspections by order, quantity and operation number"
+)
+@db_session
+def get_stage_inspections_by_filter(
+        order_id: int = Query(..., gt=0, description="Order ID"),
+        quantity_no: int = Query(..., gt=0, description="Quantity number"),
+        op_no: int = Query(..., gt=0, description="Operation number")
+) -> Any:
+    """
+    Get stage inspection data filtered by order ID, quantity number, and operation number.
+    Includes operator (user) details for each inspection.
+
+    Parameters:
+    - order_id: ID of the order
+    - quantity_no: Quantity number of the inspection
+    - op_no: Operation number
+
+    Returns:
+    - List of stage inspections with operator details matching the criteria
+    """
+    try:
+        # Query stage inspections with all filters
+        stage_inspections = select(si for si in StageInspection
+                                   if si.order_id == order_id
+                                   and si.quantity_no == quantity_no
+                                   and si.op_no == op_no)[:]
+
+        if not stage_inspections:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No stage inspections found for order {order_id}, quantity {quantity_no}, operation {op_no}"
+            )
+
+        # Prepare response with user details
+        response_data = []
+        for si in stage_inspections:
+            # Get operator information
+            operator = User.get(id=si.op_id)
+            operator_info = None
+            if operator:
+                operator_info = OperatorInfo(
+                    id=operator.id,
+                    username=operator.username,
+                    email=operator.email
+                )
+
+            # Create response object
+            inspection_data = {
+                "id": si.id,
+                "op_id": si.op_id,
+                "nominal_value": si.nominal_value,
+                "uppertol": si.uppertol,
+                "lowertol": si.lowertol,
+                "zone": si.zone,
+                "dimension_type": si.dimension_type,
+                "measured_1": si.measured_1,
+                "measured_2": si.measured_2,
+                "measured_3": si.measured_3,
+                "measured_mean": si.measured_mean,
+                "measured_instrument": si.measured_instrument,
+                "used_inst": si.used_inst,
+                "op_no": si.op_no,
+                "order_id": si.order_id,
+                "quantity_no": si.quantity_no,
+                "created_at": si.created_at,
+                "operator": operator_info
+            }
+            response_data.append(StageInspectionWithUserResponse(**inspection_data))
+
+        return response_data
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving stage inspection data: {str(e)}"
         )
 

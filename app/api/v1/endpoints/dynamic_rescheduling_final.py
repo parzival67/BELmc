@@ -15,7 +15,6 @@ import hashlib
 
 router = APIRouter(prefix="/api/v1/rescheduling", tags=["rescheduling"])
 
-
 def adjust_to_shift_hours(time: datetime) -> datetime:
     """Adjust time to fit within shift hours (9 AM to 5 PM)"""
     if time.hour < 9:
@@ -24,9 +23,7 @@ def adjust_to_shift_hours(time: datetime) -> datetime:
         return (time + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
     return time
 
-
-def calculate_shift_aware_duration(start_time: datetime, operation: Operation, quantity: int) -> Tuple[
-    datetime, timedelta]:
+def calculate_shift_aware_duration(start_time: datetime, operation: Operation, quantity: int) -> Tuple[datetime, timedelta]:
     """
     Calculate the end time and duration for an operation, respecting shift hours (9 AM to 5 PM)
     """
@@ -60,7 +57,6 @@ def calculate_shift_aware_duration(start_time: datetime, operation: Operation, q
     total_duration = timedelta(minutes=total_minutes)
     return end_time, total_duration
 
-
 def check_machine_status(machine_id: int, time: datetime) -> Tuple[bool, datetime]:
     """Check if a machine is available at a given time using algorithm logic"""
     with db_session:
@@ -80,7 +76,6 @@ def check_machine_status(machine_id: int, time: datetime) -> Tuple[bool, datetim
             return False, ms.available_from
 
         return True, time
-
 
 def find_last_available_operation(operations: List[dict], current_time: datetime) -> int:
     """Find the last operation that can be performed in sequence"""
@@ -104,7 +99,6 @@ def find_last_available_operation(operations: List[dict], current_time: datetime
 
     return last_available
 
-
 def check_raw_material_status(order: Order, time: datetime) -> Tuple[bool, datetime]:
     """Check raw material availability"""
     if not order or not order.raw_material:
@@ -122,7 +116,6 @@ def check_raw_material_status(order: Order, time: datetime) -> Tuple[bool, datet
 
     return True, time
 
-
 def calculate_operation_delay(actual_end_time: datetime, planned_end_time: datetime) -> Optional[timedelta]:
     """
     Calculate the delay between actual and planned end times
@@ -131,23 +124,10 @@ def calculate_operation_delay(actual_end_time: datetime, planned_end_time: datet
         return actual_end_time - planned_end_time
     return None
 
-
-def is_machine_in_schedulable_work_center(machine_id: int) -> bool:
-    """
-    Check if a machine belongs to a work center that is schedulable
-    """
-    with db_session:
-        machine = Machine.get(id=machine_id)
-        if not machine or not hasattr(machine, 'work_center') or not machine.work_center:
-            return False
-        return machine.work_center.is_schedulable
-
-
 def propagate_delay_to_dependent_operations(part_number: str, completed_operation_number: int,
                                             actual_end_time: datetime, completed_qty: int, total_qty: int):
     """
     Propagate scheduling changes to operations that depend on the completed operation, considering quantities
-    Only reschedule operations in work centers that are marked as schedulable
     """
     updated_items = []
 
@@ -177,15 +157,6 @@ def propagate_delay_to_dependent_operations(part_number: str, completed_operatio
 
         for i in range(completed_op_index + 1, len(operations)):
             dependent_op = operations[i]
-
-            # Skip operations that are not in schedulable work centers
-            if not hasattr(dependent_op, 'machine') or not dependent_op.machine:
-                continue
-
-            if not is_machine_in_schedulable_work_center(dependent_op.machine.id):
-                print(f"Skipping operation {dependent_op.operation_number} as it's in a non-schedulable work center")
-                continue
-
             schedule_items = list(select(item for item in PlannedScheduleItem
                                          if item.operation == dependent_op)[:])
 
@@ -251,55 +222,15 @@ def propagate_delay_to_dependent_operations(part_number: str, completed_operatio
 
     return updated_items
 
-
-def determine_work_center_schedulability(work_center: WorkCenter) -> bool:
-    """
-    Determine if a work center is schedulable based on machine availability
-    and scheduled operations
-    """
-    with db_session:
-        # First check if the work center is explicitly marked as schedulable
-        if not work_center.is_schedulable:
-            return False
-
-        # Check if the work center has at least one machine
-        if not work_center.machines:
-            return False
-
-        # Check if at least one machine in the work center is available
-        for machine in work_center.machines:
-            machine_status = select(ms for ms in MachineStatus
-                                    if ms.machine == machine).first()
-
-            if machine_status:
-                status = machine_status.status
-                if status and status.name.upper() != 'OFF':
-                    # Check if there are any scheduled operations for this machine
-                    scheduled_items = select(p for p in PlannedScheduleItem
-                                             if p.machine == machine).first()
-
-                    if scheduled_items:
-                        return True
-
-        return False
-
-
 @router.post("/dynamic-reschedule")
 async def dynamic_reschedule():
-    """Dynamically reschedule operations based on production logs with improved handling of is_schedulable flag"""
+    """Dynamically reschedule operations based on production logs with improved cascade effect"""
     try:
         with db_session:
-            # Build machine schedulability lookup dict first
-            machine_schedulability = {}
-            for work_center in WorkCenter.select():
-                for machine in work_center.machines:
-                    machine_schedulability[machine.id] = work_center.is_schedulable
-
             schedule_items = select(p for p in PlannedScheduleItem
                                     ).order_by(lambda p: (p.operation.operation_number, p.id))[:]
 
             if not schedule_items:
-                # Return empty response with work center info when no schedule items exist
                 empty_work_centers = []
                 for work_center in WorkCenter.select():
                     machines_in_wc = []
@@ -314,8 +245,7 @@ async def dynamic_reschedule():
                         WorkCenterInfo(
                             work_center_code=work_center.code,
                             work_center_name=work_center.work_center_name or "",
-                            machines=machines_in_wc,
-                            is_schedulable=work_center.is_schedulable
+                            machines=machines_in_wc
                         )
                     )
                 return CombinedScheduleResponse(
@@ -338,7 +268,6 @@ async def dynamic_reschedule():
             grouped_items = {}
             processed_operations = set()
 
-            # Collect valid part numbers based on production logs
             for item in schedule_items:
                 versions = select(v for v in ScheduleVersion
                                   if v.schedule_item == item)[:]
@@ -356,7 +285,6 @@ async def dynamic_reschedule():
                     if logs:
                         valid_part_numbers.add(item.order.part_number)
 
-            # Group items by machine, operation, and part number
             for item in schedule_items:
                 if item.order.part_number in valid_part_numbers:
                     key = (item.machine.id, item.operation.operation_number, item.order.part_number)
@@ -366,14 +294,8 @@ async def dynamic_reschedule():
 
             completed_operations = {}
 
-            # Process each group of items
             for (machine_id, operation_number, part_number), items in grouped_items.items():
                 try:
-                    # Skip if machine is in a non-schedulable work center
-                    if machine_id in machine_schedulability and not machine_schedulability[machine_id]:
-                        print(f"Skipping machine {machine_id} as it's in a non-schedulable work center")
-                        continue
-
                     if not items:
                         continue
 
@@ -391,41 +313,25 @@ async def dynamic_reschedule():
                     if not current_version:
                         continue
 
-                    # Get all logs for the operation
-                    all_operation_logs = []
-
-                    # Get logs that are connected to versions of this item
+                    all_group_logs = []
                     for item in items:
-                        versions = select(v for v in ScheduleVersion if v.schedule_item == item)[:]
-                        for version in versions:
-                            logs = select(l for l in ProductionLog if l.schedule_version == version)[:]
-                            all_operation_logs.extend(logs)
+                        item_logs_with_version = select(l for l in ProductionLog
+                                                        for v in ScheduleVersion
+                                                        if v.schedule_item == item and
+                                                        l.schedule_version == v
+                                                        ).order_by(lambda l: l.start_time)[:]
+                        item_logs_without_version = select(l for l in ProductionLog
+                                                           if l.schedule_version is None and
+                                                           l.operation == item.operation
+                                                           ).order_by(lambda l: l.start_time)[:]
+                        all_group_logs.extend(item_logs_with_version)
+                        all_group_logs.extend(item_logs_without_version)
 
-                    # Get logs that are connected directly to the operation without version
-                    operation_id = last_item.operation.id
-                    operation_logs_no_version = select(l for l in ProductionLog
-                                                       if l.schedule_version is None and
-                                                       l.operation.id == operation_id)[:]
-                    all_operation_logs.extend(operation_logs_no_version)
-
-                    # Filter out logs without completed quantities
-                    valid_logs = [log for log in all_operation_logs if log.quantity_completed is not None]
-
-                    if not valid_logs:
+                    if not all_group_logs:
                         continue
 
-                    # Calculate the actual completed quantity from logs
-                    actual_completed_qty = sum(log.quantity_completed for log in valid_logs)
-
-                    # Get the total quantity from the schedule item
-                    total_qty = last_item.total_quantity
-
-                    # Calculate remaining quantity
-                    remaining_qty = max(0, total_qty - actual_completed_qty)
-
-                    # Get valid start and end times from logs
-                    valid_start_times = [log.start_time for log in valid_logs if log.start_time is not None]
-                    valid_end_times = [log.end_time for log in valid_logs if log.end_time is not None]
+                    valid_start_times = [log.start_time for log in all_group_logs if log.start_time is not None]
+                    valid_end_times = [log.end_time for log in all_group_logs if log.end_time is not None]
 
                     if not valid_start_times or not valid_end_times:
                         continue
@@ -436,6 +342,28 @@ async def dynamic_reschedule():
                     if part_number not in completed_operations:
                         completed_operations[part_number] = []
 
+                    last_item_logs = []
+                    for log in all_group_logs:
+                        if hasattr(log,
+                                   'schedule_version') and log.schedule_version and log.schedule_version.schedule_item == last_item:
+                            last_item_logs.append(log)
+                        elif log.operation == last_item.operation:
+                            last_item_logs.append(log)
+
+                    # Calculate quantities from production logs
+                    completed_qty = sum(
+                        log.quantity_completed for log in last_item_logs if log.quantity_completed is not None)
+                    # Total quantity is the maximum completed quantity from logs, or fallback to schedule
+                    total_qty = max(
+                        [log.quantity_completed for log in last_item_logs if log.quantity_completed is not None],
+                        default=last_item.total_quantity if last_item.total_quantity else completed_qty
+                    )
+                    remaining_qty = max(0, total_qty - completed_qty)
+
+                    # Use actual production log times
+                    group_start_time = min(log.start_time for log in last_item_logs if log.start_time)
+                    group_end_time = max(log.end_time for log in last_item_logs if log.end_time)
+
                     operation_id = last_item.operation.id if last_item.operation else last_item.id
                     dependent_ops = select(o for o in Operation
                                            if o.order == last_item.order
@@ -443,15 +371,15 @@ async def dynamic_reschedule():
                     last_available_idx = find_last_available_operation(list(dependent_ops), group_start_time)
 
                     # Handle completed or partially completed operations
-                    if actual_completed_qty > 0:
+                    if completed_qty > 0:
                         new_version_number = current_version.version_number + 1
                         new_version = ScheduleVersion(
                             schedule_item=last_item,
                             version_number=new_version_number,
                             planned_start_time=group_start_time,
                             planned_end_time=group_end_time,
-                            planned_quantity=actual_completed_qty,
-                            completed_quantity=actual_completed_qty,
+                            planned_quantity=completed_qty,
+                            completed_quantity=completed_qty,
                             remaining_quantity=0,
                             is_active=True,
                             created_at=datetime.utcnow()
@@ -467,7 +395,7 @@ async def dynamic_reschedule():
                             'operation_id': operation_id,
                             'old_version': current_version.version_number,
                             'new_version': new_version_number,
-                            'completed_qty': actual_completed_qty,
+                            'completed_qty': completed_qty,
                             'remaining_qty': remaining_qty,
                             'start_time': group_start_time.isoformat(),
                             'end_time': group_end_time.isoformat(),
@@ -485,8 +413,7 @@ async def dynamic_reschedule():
                         remaining_end_time, _ = calculate_shift_aware_duration(remaining_start_time,
                                                                                last_item.operation, remaining_qty)
 
-                        new_version_number = (
-                                                 new_version.version_number if actual_completed_qty > 0 else current_version.version_number) + 1
+                        new_version_number = (new_version.version_number if completed_qty > 0 else current_version.version_number) + 1
                         new_version = ScheduleVersion(
                             schedule_item=last_item,
                             version_number=new_version_number,
@@ -499,7 +426,7 @@ async def dynamic_reschedule():
                             created_at=datetime.utcnow()
                         )
 
-                        if actual_completed_qty > 0:
+                        if completed_qty > 0:
                             # If there was a completed portion, the previous new_version is already created
                             pass
                         else:
@@ -530,7 +457,7 @@ async def dynamic_reschedule():
                         group_end_time = remaining_end_time
 
                     completed_operations[part_number].append(
-                        (operation_number, group_end_time, actual_completed_qty, total_qty))
+                        (operation_number, group_end_time, completed_qty, total_qty))
                     processed_operations.add(operation_key)
 
                 except Exception as group_error:
@@ -538,7 +465,7 @@ async def dynamic_reschedule():
                         f"Error processing group for machine {machine_id}, operation {operation_number}: {str(group_error)}")
                     continue
 
-            # Propagate delays to dependent operations, but only for schedulable work centers
+            # Propagate delays to all dependent operations
             for part_number, operations in completed_operations.items():
                 operations.sort(key=lambda x: x[0])
                 max_end_time = max(op[1] for op in operations)
@@ -562,15 +489,6 @@ async def dynamic_reschedule():
                     seen_operations[op_key] = update
             final_updates = list(seen_operations.values())
             final_updates.sort(key=lambda x: (x['part_number'], x['operation_number'], x['start_time']))
-
-            # Ensure only schedulable work centers are included
-            schedulable_updates = []
-            for update in final_updates:
-                machine_id = update['machine_id']
-                if machine_id in machine_schedulability and machine_schedulability[machine_id]:
-                    schedulable_updates.append(update)
-                else:
-                    print(f"Removing update for machine {machine_id} as it's in a non-schedulable work center")
 
             logs_query = []
             for log in ProductionLog.select():
@@ -608,7 +526,6 @@ async def dynamic_reschedule():
             total_completed = 0
             total_rejected = 0
 
-            # Process logs and create combined logs
             for result in logs_query:
                 log, operator, version, schedule_item, machine, operation, order, version_number = result
                 if log.end_time is None:
@@ -621,133 +538,74 @@ async def dynamic_reschedule():
                     else:
                         machine_name = machine.make
 
-                # Get production order from the order
-                production_order = order.production_order if order and hasattr(order, 'production_order') else None
-
-                # Group logs by part_number, operation, machine_name, and production_order
                 group_key = (
                     order.part_number if order else None,
                     operation.operation_description if operation else None,
                     machine_name,
-                    production_order
+                    version_number
                 )
+
+                is_setup = log.quantity_completed == 1
 
                 if group_key not in combined_logs:
                     combined_logs[group_key] = {
-                        'logs': [],
-                        'start_time': None,
-                        'end_time': None,
-                        'quantity_completed': 0,
-                        'quantity_rejected': 0,
-                        'operator_id': operator.id if operator else None,
-                        'part_number': order.part_number if order else None,
-                        'production_order': production_order,
-                        'operation_description': operation.operation_description if operation else None,
-                        'machine_name': machine_name,
-                        'notes': []
+                        'setup': None,
+                        'operation': None
                     }
 
-                # Add the log to the group
-                combined_logs[group_key]['logs'].append(log)
+                if is_setup:
+                    combined_logs[group_key]['setup'] = {
+                        'id': log.id,
+                        'start_time': log.start_time,
+                        'notes': log.notes or ''
+                    }
+                else:
+                    combined_logs[group_key]['operation'] = {
+                        'id': log.id,
+                        'end_time': log.end_time,
+                        'quantity_completed': log.quantity_completed or 0,
+                        'quantity_rejected': log.quantity_rejected or 0,
+                        'operator_id': operator.id if operator else None,
+                        'part_number': order.part_number if order else None,
+                        'operation_description': operation.operation_description if operation else None,
+                        'machine_name': machine_name,
+                        'version_number': version_number,
+                        'notes': log.notes or ''
+                    }
 
-                # Update the aggregate data
-                if log.start_time and (combined_logs[group_key]['start_time'] is None or
-                                       log.start_time < combined_logs[group_key]['start_time']):
-                    combined_logs[group_key]['start_time'] = log.start_time
-
-                if log.end_time and (combined_logs[group_key]['end_time'] is None or
-                                     log.end_time > combined_logs[group_key]['end_time']):
-                    combined_logs[group_key]['end_time'] = log.end_time
-
-                if log.quantity_completed:
-                    combined_logs[group_key]['quantity_completed'] += log.quantity_completed
-
-                if log.quantity_rejected:
-                    combined_logs[group_key]['quantity_rejected'] += log.quantity_rejected
-
-                if log.notes:
-                    combined_logs[group_key]['notes'].append(log.notes)
-
-            # Create the production log response from the combined data
-            for group_key, group_data in combined_logs.items():
-                if group_data['logs']:
-                    # Use the ID from the last log in the group (most recent)
-                    log_id = group_data['logs'][-1].id
-
-                    # Join all notes with a separator
-                    notes = " | ".join(group_data['notes']) if group_data['notes'] else ""
-
-                    # Create the log entry with production_order included
+            for group_data in combined_logs.values():
+                setup = group_data['setup']
+                operation = group_data['operation']
+                if setup and operation:
                     log_entry = ProductionLogResponse(
-                        id=log_id,
-                        operator_id=group_data['operator_id'],
-                        start_time=group_data['start_time'],
-                        end_time=group_data['end_time'],
-                        quantity_completed=group_data['quantity_completed'],
-                        quantity_rejected=group_data['quantity_rejected'],
-                        part_number=group_data['part_number'],
-                        production_order=group_data['production_order'],  # Include production_order in response
-                        operation_description=group_data['operation_description'],
-                        machine_name=group_data['machine_name'],
-                        notes=notes,
-                        version_number=None  # Version number is not critical for aggregated logs
+                        id=operation['id'],
+                        operator_id=operation['operator_id'],
+                        start_time=setup['start_time'],
+                        end_time=operation['end_time'],
+                        quantity_completed=operation['quantity_completed'],
+                        quantity_rejected=operation['quantity_rejected'],
+                        part_number=operation['part_number'],
+                        operation_description=operation['operation_description'],
+                        machine_name=operation['machine_name'],
+                        notes=f"Setup: {setup['notes']} | Operation: {operation['notes']}",
+                        version_number=operation['version_number']
                     )
-
                     production_logs.append(log_entry)
-                    total_completed += group_data['quantity_completed']
-                    total_rejected += group_data['quantity_rejected']
+                    total_completed += operation['quantity_completed']
+                    total_rejected += operation['quantity_rejected']
 
-            # Fetch operation data and schedule operations
             df = fetch_operations()
             component_quantities = fetch_component_quantities()
             lead_times = fetch_lead_times()
 
-            # Create a filter function for schedulable machines
-            def filter_schedulable_machines(operations_df):
-                """Filter operations dataframe to only include operations for schedulable work centers"""
-                if operations_df.empty:
-                    return operations_df
-
-                # Create a list of schedulable machine IDs
-                schedulable_machine_ids = [
-                    machine_id for machine_id, is_schedulable in machine_schedulability.items()
-                    if is_schedulable
-                ]
-
-                # Filter the dataframe to only include operations for schedulable machines
-                return operations_df[operations_df['machine_id'].isin(schedulable_machine_ids)]
-
-            # Filter operations before scheduling
-            filtered_df = filter_schedulable_machines(df)
-
-            # Only schedule if there are operations for schedulable machines
-            if not filtered_df.empty:
-                schedule_df, overall_end_time, overall_time, daily_production, _, _ = schedule_operations(
-                    filtered_df, component_quantities, lead_times
-                )
-            else:
-                # Create empty dataframe with appropriate columns if no schedulable operations
-                import pandas as pd
-                schedule_df = pd.DataFrame(columns=['partno', 'operation', 'machine_id', 'start_time',
-                                                    'end_time', 'quantity'])
-                overall_end_time = datetime.now()
-                overall_time = timedelta(0)
-                daily_production = {}
+            schedule_df, overall_end_time, overall_time, daily_production, _, _ = schedule_operations(
+                df, component_quantities, lead_times
+            )
 
             combined_schedule = {}
             scheduled_operations = []
 
             if not schedule_df.empty:
-                # Get mapping of machine IDs to work centers for checking schedulability
-                machine_to_work_center = {}
-                for machine in Machine.select():
-                    if hasattr(machine, 'work_center') and machine.work_center:
-                        machine_to_work_center[machine.id] = {
-                            'code': machine.work_center.code,
-                            'name': machine.make,
-                            'is_schedulable': machine.work_center.is_schedulable
-                        }
-
                 machine_details = {
                     machine.id: f"{machine.work_center.code}-{machine.make}"
                     for machine in Machine.select()
@@ -760,12 +618,6 @@ async def dynamic_reschedule():
                 }
 
                 for _, row in schedule_df.iterrows():
-                    # Skip operations in non-schedulable work centers
-                    machine_id = row['machine_id']
-                    if machine_id in machine_to_work_center and not machine_to_work_center[machine_id][
-                        'is_schedulable']:
-                        continue
-
                     quantity_str = row['quantity']
                     total_qty = 1
                     current_qty = 1
@@ -838,7 +690,6 @@ async def dynamic_reschedule():
                         )
                     )
 
-                # Modified this section to preserve the is_schedulable flag from the database
             work_center_data = []
             for work_center in WorkCenter.select():
                 machines_in_wc = []
@@ -853,8 +704,7 @@ async def dynamic_reschedule():
                     WorkCenterInfo(
                         work_center_code=work_center.code,
                         work_center_name=work_center.work_center_name or "",
-                        machines=machines_in_wc,
-                        is_schedulable=work_center.is_schedulable  # Use the actual value from the database
+                        machines=machines_in_wc
                     )
                 )
 

@@ -37,7 +37,7 @@ class Machine(db.Entity):
     status = Set('MachineStatus')
     operations = Set('Operation')  # Reverse relationship
     planned_schedule_items = Set('PlannedScheduleItem', reverse='machine')
-    credential = Optional('MachineCredential', reverse='machine')
+    credential = Optional('MachineCredential', reverse='machine', cascade_delete=True)
     notification = Set('MachineCalibrationLog')
 
 
@@ -73,7 +73,9 @@ class MachineStatus(db.Entity):
     machine = Required(Machine)
     status = Required(Status)
     description = Optional(str)
-    available_from = Optional(datetime)  # New column
+    available_from = Optional(datetime)  # Start of status period
+    available_to = Optional(datetime)    # ⬅️ NEW: End of status period (needed for range checking)
+
 
 
 class Project(db.Entity):
@@ -110,7 +112,6 @@ class Order(db.Entity):
     inventory_requests = Set("InventoryRequest")
     documents_v2 = Set('DocumentV2', reverse='production_order')
     order_tools = Set("OrderTool", reverse="order")  # Updated relationship name
-    master_bocs = Set('MasterBoc', reverse='order')  # Add this line for MasterBoc relationship
 
 
 
@@ -136,7 +137,6 @@ class Operation(db.Entity):
     machine_raw_live_2 = Set('MachineRawLive', reverse='actual_job')
     machine_raw_1 = Set('MachineRaw', reverse='scheduled_job')
     machine_raw_2 = Set('MachineRaw', reverse='actual_job')
-
     inventory_requests = Set("InventoryRequest")
 
 

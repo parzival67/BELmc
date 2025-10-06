@@ -61,13 +61,11 @@ class LSV2Client:
 
             data = {}
 
-            # Get program status
+            # Get program status and operation mode
             data["prog_status"] = self.client.program_status().value
-
-            # Get operation mode
             data["op_mode"] = self.client.execution_state().value
 
-            # Get active and selected programs
+            # Get active and selected programs using regex
             program_stack_text = str(self.client.program_stack())
             program_match = re.search(r"Main\s+'([^']+)'\s+Current\s+'([^']+)'", program_stack_text)
 
@@ -78,11 +76,11 @@ class LSV2Client:
                 data["selected_program"] = ""
                 data["active_program"] = ""
 
-            # Placeholder for part info
+            # Placeholder values for parts
             data["part_count"] = 0
             data["part_status"] = 0
 
-            # Determine machine status
+            # Determine status (Production or Idle)
             if data["prog_status"] == 0:
                 data["machine_status"] = 2  # Production
             else:
@@ -104,12 +102,11 @@ class MachineMonitor:
         self.clients = {}
         self.running = False
 
-        # Operation intervals
-        self.poll_interval = 1
-        self.retry_delay = 60
+        # Time intervals
+        self.poll_interval = 1  # Poll every second
+        self.retry_delay = 60  # Retry after 60 seconds on failure
 
-        # Stores last known state of program completion for each machine
-        self.previous_states = {}
+        self.previous_states = {}  # Tracks last known part completion flag
 
     def load_config(self):
         """Load configuration from JSON file"""
@@ -122,7 +119,7 @@ class MachineMonitor:
             return False
 
     def setup(self):
-        """Setup database connection and LSV2 clients"""
+        """Setup database connection and initialize LSV2 clients"""
         try:
             connect_to_db()
             DatabaseManager.initialize_db()
@@ -139,7 +136,6 @@ class MachineMonitor:
                 self.clients[machine_id] = client
                 client.connect()
 
-                # Initialize previous state to False
                 self.previous_states[machine_id] = False
 
             return True
@@ -160,6 +156,7 @@ class MachineMonitor:
             while self.running:
                 for machine_id, client in self.clients.items():
                     try:
+                        # Reconnect if not connected
                         if not client.is_connected():
                             if client.connect():
                                 print(f"Reconnected to machine ID: {machine_id}")
@@ -170,33 +167,33 @@ class MachineMonitor:
                         prev_state = self.previous_states.get(machine_id, False)
                         current_state = False
 
+                        # Detect part completion from PLC memory
                         try:
-                            # Read PLC memory to check program finished flag
                             if machine_id in [1, 2, 5]:
                                 current_state = client.client.read_plc_memory(
                                     4170, pyLSV2.MemoryType.MARKER, 1
                                 )[0]
                             else:
-                                current_state = client.client.read_plc_memory(2592, pyLSV2.MemoryType.DWORD, 1) == 255
+                                current_state = client.client.read_plc_memory(
+                                    2592, pyLSV2.MemoryType.DWORD, 1
+                                ) == 255
 
                         except Exception as e:
                             print(f"Error reading PLC memory for machine {machine_id}: {e}")
 
-                        # Detect rising edge (False -> True)
+                        # Detect rising edge: False → True
                         rising_edge = current_state and not prev_state
 
-                        # Get machine data
+                        # Get current machine status
                         data = client.get_machine_data(machine_id)
 
+                        # Record part count only if rising edge detected
                         data["part_count"] = 1 if rising_edge else 0
 
-                        # Update previous state (reset on falling edge)
-                        if not current_state:
-                            self.previous_states[machine_id] = False
-                        else:
-                            self.previous_states[machine_id] = True
+                        # Update previous state
+                        self.previous_states[machine_id] = current_state
 
-                        # Record to database
+                        # Save data to database
                         DatabaseManager.record_machine_data(machine_id, data)
 
                     except ConnectionError:
@@ -216,7 +213,7 @@ class MachineMonitor:
             self.cleanup()
 
     def cleanup(self):
-        """Clean up resources before exit"""
+        """Clean up connections on shutdown"""
         try:
             for machine_id, client in self.clients.items():
                 client.disconnect()

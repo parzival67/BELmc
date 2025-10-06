@@ -7,6 +7,9 @@ import json
 import io
 import shutil
 from datetime import datetime, timedelta
+
+from app.api.v1.endpoints.document_management_v2 import DocumentTypes
+from app.models.document_management_v2 import FolderV2, DocumentVersionV2, DocumentV2, DocumentTypeV2
 from app.schemas.document_schemas import (
     DocTypeCreate, DocTypeResponse, FolderCreate, FolderResponse,
     DocumentCreate, DocumentResponse, DocumentUpdate, DocumentVersionCreate,
@@ -21,7 +24,7 @@ from app.core.security import get_current_user, get_current_admin_user
 from app.models.user import User
 from app.models.master_order import Order
 from app.models.master_order import Operation
-
+import logging
 
 router = APIRouter(prefix="/documents", tags=["Document Management"])
 minio_service = MinioService()
@@ -2151,3 +2154,4 @@ def list_available_ipid_documents(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

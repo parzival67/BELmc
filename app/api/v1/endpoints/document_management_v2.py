@@ -62,6 +62,69 @@ async def get_document_stats(
         )
 
 
+@router.get("/documents/analytics")
+async def get_document_analytics(current_user=Depends(get_current_user)):
+    """Get comprehensive analytics for document management"""
+    try:
+        with db_session:
+            # Total documents
+            total_documents = select(d for d in DocumentV2 if d.is_active).count()
+            # Total versions
+            total_versions = select(v for v in DocumentVersionV2 if v.is_active).count()
+            # Total downloads
+            total_downloads = select(l for l in DocumentAccessLogV2 if l.action_type == "DOWNLOAD").count()
+            # Total storage (sum of all active version file sizes)
+            total_storage = select(sum(v.file_size) for v in DocumentVersionV2 if v.is_active).first() or 0
+
+            # Document counts by type
+            docs_by_type = select((d.doc_type.name, count(d)) for d in DocumentV2 if d.is_active).fetch()
+            # Download counts by type
+            downloads_by_type = {}
+            for dt in DocumentTypeV2.select(lambda t: t.is_active):
+                downloads_by_type[dt.name] = select(l for l in DocumentAccessLogV2 if l.action_type == "DOWNLOAD" and l.document.doc_type == dt).count()
+            # Storage by type
+            storage_by_type = {}
+            for dt in DocumentTypeV2.select(lambda t: t.is_active):
+                storage_by_type[dt.name] = select(sum(v.file_size) for v in DocumentVersionV2 if v.is_active and v.document.doc_type == dt).first() or 0
+            # Versions by type
+            versions_by_type = {}
+            for dt in DocumentTypeV2.select(lambda t: t.is_active):
+                versions_by_type[dt.name] = select(v for v in DocumentVersionV2 if v.is_active and v.document.doc_type == dt).count()
+
+            # List all document types with their metadata
+            doc_types = [
+                {
+                    "id": dt.id,
+                    "name": dt.name,
+                    "description": dt.description,
+                    "allowed_extensions": dt.allowed_extensions,
+                    "is_active": dt.is_active,
+                    "document_count": docs_by_type.get(dt.name, 0) if isinstance(docs_by_type, dict) else dict(docs_by_type).get(dt.name, 0),
+                    "download_count": downloads_by_type.get(dt.name, 0),
+                    "storage": storage_by_type.get(dt.name, 0),
+                    "version_count": versions_by_type.get(dt.name, 0)
+                }
+                for dt in DocumentTypeV2.select(lambda t: t.is_active)
+            ]
+
+            return {
+                "total_documents": total_documents,
+                "total_versions": total_versions,
+                "total_downloads": total_downloads,
+                "total_storage": total_storage,
+                "documents_by_type": dict(docs_by_type),
+                "downloads_by_type": downloads_by_type,
+                "storage_by_type": storage_by_type,
+                "versions_by_type": versions_by_type,
+                "document_types": doc_types
+            }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
 @router.get("/documents/by-multiple-part-numbers", response_model=List[DocumentResponse])
 async def get_documents_by_part_numbers(
         part_numbers: List[str] = Query(..., description="List of part numbers"),
@@ -445,11 +508,9 @@ async def list_documents(
         folder_id: int | None = None,
         part_number: str | None = None,
         production_order_id: int | None = None,
-        page: int = Query(1, ge=1),
-        page_size: int = Query(10, ge=1, le=100),
         current_user=Depends(get_current_user)
 ):
-    """List documents with optional filters and pagination"""
+    """List documents with optional filters (no pagination)"""
     try:
         with db_session:
             # Start with base query
@@ -464,13 +525,9 @@ async def list_documents(
                 base_query = base_query.filter(
                     lambda d: d.production_order and d.production_order.id == production_order_id)
 
-            # Get total count
-            total = base_query.count()
-
-            # Apply pagination and ordering
-            documents = list(base_query
-                             .order_by(lambda d: desc(d.created_at))
-                             .limit(page_size, offset=(page - 1) * page_size))
+            # Get all documents (no pagination)
+            documents = list(base_query.order_by(lambda d: desc(d.created_at)))
+            total = len(documents)
 
             # Format response
             return {
@@ -787,11 +844,16 @@ async def download_document(
             # Get file from MinIO
             file_data = minio.download_file(version.minio_path)
 
+            # Get file extension from minio path
+            file_extension = version.minio_path.split('.')[
+                -1] if '.' in version.minio_path else ''
+            filename = f"{document.name}.{file_extension}" if file_extension else document.name
+
             return StreamingResponse(
                 file_data,
                 media_type="application/octet-stream",
                 headers={
-                    "Content-Disposition": f'attachment; filename="{document.name}"'
+                    "Content-Disposition": f'attachment; filename="{filename}"'
                 }
             )
     except Exception as e:
@@ -854,7 +916,12 @@ async def download_latest_document(
                     file_data,
                     media_type=content_type,
                     headers={
-                        "Content-Disposition": f'attachment; filename="{filename}"'
+                        "Content-Disposition": f'attachment; filename="{filename}"',
+                        # CORS headers to expose Content-Disposition
+                        "Access-Control-Expose-Headers": "Content-Disposition, Content-Type, Content-Length",
+                        "Access-Control-Allow-Origin": "*",  # Replace with your frontend domain for security
+                        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type, Authorization"
                     }
                 )
             except Exception as e:
@@ -1789,81 +1856,6 @@ async def get_ipid_documents(
         )
 
 
-# Add a helper function to get documents by operation
-@router.get("/by-operation/{production_order}/{operation_number}", response_model=List[DocumentResponse])
-def get_documents_by_operation(
-        production_order: str,
-        operation_number: int,
-        current_user: User = Depends(get_current_user)
-):
-    """Get all documents (including IPID) for a specific operation of a production order"""
-    try:
-        with db_session:
-            # Re-fetch user within session
-            user = User[current_user.id]
-
-            # Get the order and operation
-            order = Order.get(production_order=production_order)
-            if not order:
-                raise HTTPException(status_code=404, detail="Production order not found")
-
-            operation = Operation.get(order=order, operation_number=operation_number)
-            if not operation:
-                raise HTTPException(status_code=404, detail="Operation not found")
-
-            # Get all documents for this operation
-            documents = select(d for d in Document
-                               if d.is_active and
-                               d.part_number_id == order and
-                               d.latest_version
-                               )[:]
-
-            # Prepare response data
-            response_data = []
-            for doc in documents:
-                metadata = doc.latest_version.metadata
-                if isinstance(metadata, dict) and metadata.get("operation_number") == operation_number:
-                    # Log access
-                    DocumentAccessLog(
-                        document=doc,
-                        version=doc.latest_version,
-                        user=user,
-                        action_type="view"
-                    )
-
-                    # Create response dictionary matching DocumentResponse model
-                    response_data.append({
-                        "id": doc.id,
-                        "name": doc.document_name,  # Changed from document_name to name
-                        "folder_id": doc.folder.id,
-                        "doc_type_id": doc.doc_type.id,
-                        "description": doc.description,
-                        "part_number": order.production_order,  # Use production_order as part_number
-                        "production_order_id": order.id,
-                        "created_at": doc.created_at,
-                        "created_by_id": doc.created_by.id,
-                        "is_active": doc.is_active,
-                        "latest_version": {
-                            "id": doc.latest_version.id,
-                            "document_id": doc.id,
-                            "version_number": doc.latest_version.version_number,
-                            "minio_path": doc.latest_version.minio_object_id,
-                            "file_size": doc.latest_version.file_size,
-                            "checksum": doc.latest_version.checksum,
-                            "created_at": doc.latest_version.created_at,
-                            "created_by_id": doc.latest_version.created_by.id,
-                            "is_active": doc.latest_version.status == 'active',
-                            "metadata": doc.latest_version.metadata
-                        } if doc.latest_version else None
-                    })
-
-            commit()
-            return response_data
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/ipid/download/{production_order}/{operation_number}")
 def download_ipid_document(
         production_order: str,
@@ -1951,52 +1943,87 @@ def download_ipid_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Optional: Add an endpoint to list available documents before downloading
-@router.get("/ipid/available/{production_order}/{operation_number}")
-def list_available_ipid_documents(
+@router.get("/ipid/by-po/{production_order}", response_model=List[DocumentResponse])
+async def get_ipid_documents_by_po(
         production_order: str,
-        operation_number: int,
         current_user: User = Depends(get_current_user)
 ):
-    """List all available IPID documents for a specific production order and operation"""
+    """Get all IPID documents for a specific production order across all operations"""
     try:
         with db_session:
+            # Get IPID document type using DocumentTypes enum
+            doc_type = DocumentTypeV2.get(name=DocumentTypes.IPID.value)
+            if not doc_type:
+                raise HTTPException(status_code=404, detail="IPID document type not found")
+
             # Get the order
             order = Order.get(production_order=production_order)
             if not order:
                 raise HTTPException(status_code=404, detail="Production order not found")
 
-            # Get IPID document type
-            doc_type = DocType.get(type_name="IPID")
-            if not doc_type:
-                return []
+            # Query documents using production_order
+            documents = select(d for d in DocumentV2
+                               if d.production_order == order
+                               and d.doc_type == doc_type
+                               and d.is_active == True)[:]
 
-            # Get all documents
-            documents = select(d for d in Document
-                               if d.is_active and
-                               d.part_number_id == order and
-                               d.doc_type == doc_type and
-                               d.latest_version
-                               ).order_by(lambda d: desc(d.created_at))[:]
-
-            # Filter and prepare response
-            response_data = []
+            # Format response according to DocumentResponse model
+            response = []
             for doc in documents:
-                metadata = doc.latest_version.metadata
-                if isinstance(metadata, dict) and metadata.get("operation_number") == operation_number:
-                    response_data.append({
-                        "id": doc.id,
-                        "document_name": doc.document_name,
-                        "created_at": doc.created_at,
-                        "version": doc.latest_version.version_number,
-                        "file_size": doc.latest_version.file_size,
-                        "created_by": doc.created_by.id
-                    })
+                if not doc.latest_version:
+                    continue
 
-            return response_data
+                # Extract operation number from metadata if available
+                operation_number = None
+                if doc.latest_version.metadata and isinstance(doc.latest_version.metadata, dict):
+                    operation_number = doc.latest_version.metadata.get("operation_number")
+
+                doc_response = {
+                    "id": doc.id,
+                    "name": doc.name,
+                    "folder_id": doc.folder.id,
+                    "doc_type_id": doc.doc_type.id,
+                    "description": doc.description,
+                    "part_number": doc.part_number,
+                    "production_order_id": doc.production_order.id if doc.production_order else None,
+                    "created_at": doc.created_at,
+                    "created_by_id": doc.created_by.id,
+                    "is_active": doc.is_active,
+                    "latest_version": {
+                        "id": doc.latest_version.id,
+                        "document_id": doc.id,
+                        "version_number": doc.latest_version.version_number,
+                        "minio_path": doc.latest_version.minio_path,
+                        "file_size": doc.latest_version.file_size,
+                        "checksum": doc.latest_version.checksum,
+                        "created_at": doc.latest_version.created_at,
+                        "created_by_id": doc.latest_version.created_by.id,
+                        "is_active": doc.latest_version.is_active,
+                        "metadata": {
+                            **(doc.latest_version.metadata or {}),
+                            "operation_number": operation_number
+                        }
+                    }
+                }
+                response.append(doc_response)
+
+            # Sort response by operation number if available
+            response.sort(
+                key=lambda x: (
+                    int(x["latest_version"]["metadata"].get("operation_number", 999999))
+                    if x["latest_version"]["metadata"].get("operation_number") is not None
+                    else 999999
+                )
+            )
+
+            return response
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving IPID documents: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving IPID documents: {str(e)}"
+        )
 
 
 @router.get("/documents/download-latest_new/{part_number}/{doc_type}")
@@ -4214,4 +4241,671 @@ async def get_cnc_program_document_type(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving CNC program document type: {str(e)}"
+        )
+
+
+# General Document Management Deletion Endpoints
+@router.delete("/folders/{folder_id}", status_code=200)
+async def delete_folder(
+        folder_id: int,
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Soft delete a folder and all its contents (documents and subfolders).
+    Sets is_active=False rather than actually deleting records.
+    """
+    try:
+        with db_session:
+            user = User.get(id=current_user.id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            folder = FolderV2.get(id=folder_id)
+            if not folder:
+                raise HTTPException(status_code=404, detail="Folder not found")
+
+            if not folder.is_active:
+                return {"message": f"Folder '{folder.name}' is already deleted"}
+
+            # Function to recursively mark folder and all its contents as inactive
+            def mark_folder_inactive(target_folder):
+                # Mark all documents in the folder as inactive
+                documents = select(d for d in DocumentV2 if d.folder == target_folder and d.is_active)
+                for doc in documents:
+                    doc.is_active = False
+
+                    # Log deletion
+                    DocumentAccessLogV2(
+                        document=doc,
+                        version=doc.latest_version,
+                        user=user,
+                        action_type=DocumentAction.DELETE,
+                        ip_address="0.0.0.0"
+                    )
+
+                # Recursively mark all subfolders and their contents as inactive
+                subfolders = select(f for f in FolderV2 if f.parent_folder == target_folder and f.is_active)
+                for subfolder in subfolders:
+                    mark_folder_inactive(subfolder)
+
+                # Finally mark the folder itself as inactive
+                target_folder.is_active = False
+
+            # Execute the recursive deletion
+            mark_folder_inactive(folder)
+            commit()
+
+            return {"message": f"Folder '{folder.name}' and all its contents have been deleted"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.delete("/documents/{document_id}", status_code=200)
+async def delete_document(
+        document_id: int,
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Soft delete a document.
+    Sets is_active=False rather than actually deleting the record.
+    """
+    try:
+        with db_session:
+            user = User.get(id=current_user.id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            document = DocumentV2.get(id=document_id)
+            if not document:
+                raise HTTPException(status_code=404, detail="Document not found")
+
+            if not document.is_active:
+                return {"message": f"Document '{document.name}' is already deleted"}
+
+            # Mark document as inactive
+            document.is_active = False
+
+            # Log deletion
+            DocumentAccessLogV2(
+                document=document,
+                version=document.latest_version,
+                user=user,
+                action_type=DocumentAction.DELETE,
+                ip_address="0.0.0.0"
+            )
+
+            commit()
+
+            return {"message": f"Document '{document.name}' has been deleted"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.delete("/document-versions/{version_id}", status_code=200)
+async def delete_document_version(
+        version_id: int,
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Soft delete a document version.
+    Sets is_active=False rather than actually deleting the record.
+    If this is the latest version, updates the document's latest_version to the next most recent active version.
+    """
+    try:
+        with db_session:
+            user = User.get(id=current_user.id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            version = DocumentVersionV2.get(id=version_id)
+            if not version:
+                raise HTTPException(status_code=404, detail="Version not found")
+
+            if not version.is_active:
+                return {"message": f"Version {version.version_number} is already deleted"}
+
+            document = version.document
+            is_latest = document.latest_version == version
+
+            # Mark version as inactive
+            version.is_active = False
+
+            # Log deletion
+            DocumentAccessLogV2(
+                document=document,
+                version=version,
+                user=user,
+                action_type=DocumentAction.DELETE,
+                ip_address="0.0.0.0"
+            )
+
+            # If this was the latest version, update the document's latest_version
+            if is_latest:
+                # Find the next most recent active version
+                next_latest = select(v for v in DocumentVersionV2
+                                     if v.document == document and
+                                     v.is_active and
+                                     v.id != version_id
+                                     ).order_by(desc(DocumentVersionV2.created_at)).first()
+                document.latest_version = next_latest
+
+            commit()
+
+            return {"message": f"Version {version.version_number} has been deleted" +
+                               (", document latest_version has been updated" if is_latest else "")}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.delete("/document-types/{doc_type_id}", status_code=200)
+async def delete_document_type(
+        doc_type_id: int,
+        force: bool = Query(False, description="If true, will delete even if documents exist with this type"),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Soft delete a document type.
+    By default, will not delete if there are active documents using this type unless force=True.
+    """
+    try:
+        with db_session:
+            user = User.get(id=current_user.id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            doc_type = DocumentTypeV2.get(id=doc_type_id)
+            if not doc_type:
+                raise HTTPException(status_code=404, detail="Document type not found")
+
+            if not doc_type.is_active:
+                return {"message": f"Document type '{doc_type.name}' is already deleted"}
+
+            # Check if there are active documents using this type
+            active_docs_count = select(d for d in DocumentV2
+                                       if d.doc_type == doc_type and d.is_active).count()
+
+            if active_docs_count > 0 and not force:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot delete document type '{doc_type.name}' as it is used by {active_docs_count} active documents. Use 'force=true' to delete anyway."
+                )
+
+            # If forced, mark all related documents as inactive
+            if force and active_docs_count > 0:
+                active_docs = select(d for d in DocumentV2 if d.doc_type == doc_type and d.is_active)
+                for doc in active_docs:
+                    doc.is_active = False
+                    # Log document deletion
+                    DocumentAccessLogV2(
+                        document=doc,
+                        version=doc.latest_version,
+                        user=user,
+                        action_type=DocumentAction.DELETE,
+                        ip_address="0.0.0.0"
+                    )
+
+            # Mark document type as inactive
+            doc_type.is_active = False
+            commit()
+
+            return {"message": f"Document type '{doc_type.name}' has been deleted" +
+                               (
+                                   f" along with {active_docs_count} related documents" if force and active_docs_count > 0 else "")}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.post("/documents/{document_id}/restore", status_code=200)
+async def restore_document(
+        document_id: int,
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Restore a previously deleted document by setting is_active back to True.
+    """
+    try:
+        with db_session:
+            user = User.get(id=current_user.id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            document = DocumentV2.get(id=document_id)
+            if not document:
+                raise HTTPException(status_code=404, detail="Document not found")
+
+            if document.is_active:
+                return {"message": f"Document '{document.name}' is already active"}
+
+            # Check if the document's folder is active
+            if not document.folder.is_active:
+                # Restore the folder first
+                folder = document.folder
+                folder.is_active = True
+                # Also restore parent folders if needed
+                while folder.parent_folder and not folder.parent_folder.is_active:
+                    folder.parent_folder.is_active = True
+                    folder = folder.parent_folder
+
+            # Restore the document
+            document.is_active = True
+
+            # Log restoration
+            DocumentAccessLogV2(
+                document=document,
+                version=document.latest_version,
+                user=user,
+                action_type=DocumentAction.UPDATE,
+                ip_address="0.0.0.0"
+            )
+
+            commit()
+
+            return {"message": f"Document '{document.name}' has been restored"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.post("/folders/{folder_id}/restore", status_code=200)
+async def restore_folder(
+        folder_id: int,
+        restore_contents: bool = Query(True,
+                                       description="If true, will also restore all documents and subfolders within this folder"),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Restore a previously deleted folder by setting is_active back to True.
+    Optionally also restores all contents (documents and subfolders).
+    """
+    try:
+        with db_session:
+            user = User.get(id=current_user.id)
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+
+            folder = FolderV2.get(id=folder_id)
+            if not folder:
+                raise HTTPException(status_code=404, detail="Folder not found")
+
+            if folder.is_active:
+                return {"message": f"Folder '{folder.name}' is already active"}
+
+            # Check if parent folders are active, and restore them if not
+            current_folder = folder
+            while current_folder.parent_folder and not current_folder.parent_folder.is_active:
+                current_folder.parent_folder.is_active = True
+                current_folder = current_folder.parent_folder
+
+            # Restore this folder
+            folder.is_active = True
+
+            # If requested, restore all contents too
+            restored_doc_count = 0
+            restored_folder_count = 1  # Count this folder
+
+            if restore_contents:
+                # Function to recursively restore folder contents
+                def restore_folder_contents(target_folder):
+                    nonlocal restored_doc_count, restored_folder_count
+
+                    # Restore all documents in the folder
+                    inactive_docs = select(d for d in DocumentV2 if d.folder == target_folder and not d.is_active)
+                    for doc in inactive_docs:
+                        doc.is_active = True
+                        restored_doc_count += 1
+
+                        # Log restoration
+                        DocumentAccessLogV2(
+                            document=doc,
+                            version=doc.latest_version,
+                            user=user,
+                            action_type=DocumentAction.UPDATE,
+                            ip_address="0.0.0.0"
+                        )
+
+                    # Recursively restore all subfolders and their contents
+                    inactive_subfolders = select(
+                        f for f in FolderV2 if f.parent_folder == target_folder and not f.is_active)
+                    for subfolder in inactive_subfolders:
+                        subfolder.is_active = True
+                        restored_folder_count += 1
+                        restore_folder_contents(subfolder)
+
+                # Execute the recursive restoration
+                restore_folder_contents(folder)
+
+            commit()
+
+            return {
+                "message": f"Folder '{folder.name}' has been restored",
+                "restored_folders": restored_folder_count,
+                "restored_documents": restored_doc_count
+            }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.get("/trash/documents", response_model=DocumentListResponse)
+async def list_deleted_documents(
+        folder_id: int | None = None,
+        page: int = Query(1, ge=1),
+        page_size: int = Query(10, ge=1, le=100),
+        current_user=Depends(get_current_user)
+):
+    """List soft-deleted documents with optional filters and pagination"""
+    try:
+        with db_session:
+            # Start with base query for inactive documents
+            base_query = DocumentV2.select(lambda d: not d.is_active)
+
+            # Apply folder filter if provided
+            if folder_id:
+                base_query = base_query.filter(lambda d: d.folder.id == folder_id)
+
+            # Get total count
+            total = base_query.count()
+
+            # Apply pagination and ordering
+            documents = list(base_query
+                             .order_by(lambda d: desc(d.created_at))
+                             .limit(page_size, offset=(page - 1) * page_size))
+
+            # Format response
+            return {
+                "total": total,
+                "items": [
+                    {
+                        "id": doc.id,
+                        "name": doc.name,
+                        "folder_id": doc.folder.id,
+                        "doc_type_id": doc.doc_type.id,
+                        "description": doc.description,
+                        "part_number": doc.part_number,
+                        "production_order_id": doc.production_order.id if doc.production_order else None,
+                        "created_at": doc.created_at,
+                        "created_by_id": doc.created_by.id,
+                        "is_active": doc.is_active,
+                        "latest_version": {
+                            "id": doc.latest_version.id,
+                            "document_id": doc.latest_version.document.id,
+                            "version_number": doc.latest_version.version_number,
+                            "minio_path": doc.latest_version.minio_path,
+                            "file_size": doc.latest_version.file_size,
+                            "checksum": doc.latest_version.checksum,
+                            "created_at": doc.latest_version.created_at,
+                            "created_by_id": doc.latest_version.created_by.id,
+                            "is_active": doc.latest_version.is_active,
+                            "metadata": doc.latest_version.metadata
+                        } if doc.latest_version else None
+                    }
+                    for doc in documents
+                ]
+            }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.get("/trash/folders", response_model=List[FolderResponse])
+async def list_deleted_folders(
+        parent_id: int | None = None,
+        current_user=Depends(get_current_user)
+):
+    """List soft-deleted folders, optionally filtered by parent folder"""
+    try:
+        with db_session:
+            if parent_id:
+                folders = list(FolderV2.select(lambda f: not f.is_active and f.parent_folder.id == parent_id))
+            else:
+                folders = list(FolderV2.select(lambda f: not f.is_active))
+
+            return [
+                {
+                    "id": f.id,
+                    "name": f.name,
+                    "path": f.path,
+                    "parent_folder_id": f.parent_folder.id if f.parent_folder else None,
+                    "created_at": f.created_at,
+                    "created_by_id": f.created_by.id,
+                    "is_active": f.is_active
+                }
+                for f in folders
+            ]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+
+@router.get("/ipid/all", response_model=List[DocumentResponse])
+async def get_all_ipid_documents(
+        current_user: User = Depends(get_current_user)
+):
+    """Get all IPID documents across all production orders and operations"""
+    try:
+        with db_session:
+            # Get IPID document type using DocumentTypes enum
+            doc_type = DocumentTypeV2.get(name=DocumentTypes.IPID.value)
+            if not doc_type:
+                raise HTTPException(status_code=404, detail="IPID document type not found")
+
+            # Query all active IPID documents, ordered by most recent first
+            documents = select(d for d in DocumentV2
+                               if d.doc_type == doc_type
+                               and d.is_active == True
+                               ).order_by(lambda d: desc(d.created_at))[:]
+
+            # Format response according to DocumentResponse model
+            response = []
+            for doc in documents:
+                if not doc.latest_version:
+                    continue
+
+                # Extract operation number from metadata if available
+                operation_number = None
+                if doc.latest_version.metadata and isinstance(doc.latest_version.metadata, dict):
+                    operation_number = doc.latest_version.metadata.get("operation_number")
+
+                doc_response = {
+                    "id": doc.id,
+                    "name": doc.name,
+                    "folder_id": doc.folder.id,
+                    "doc_type_id": doc.doc_type.id,
+                    "description": doc.description,
+                    "part_number": doc.part_number,
+                    "production_order_id": doc.production_order.id if doc.production_order else None,
+                    "created_at": doc.created_at,
+                    "created_by_id": doc.created_by.id,
+                    "is_active": doc.is_active,
+                    "latest_version": {
+                        "id": doc.latest_version.id,
+                        "document_id": doc.id,
+                        "version_number": doc.latest_version.version_number,
+                        "minio_path": doc.latest_version.minio_path,
+                        "file_size": doc.latest_version.file_size,
+                        "checksum": doc.latest_version.checksum,
+                        "created_at": doc.latest_version.created_at,
+                        "created_by_id": doc.latest_version.created_by.id,
+                        "is_active": doc.latest_version.is_active,
+                        "metadata": {
+                            **(doc.latest_version.metadata or {}),
+                            "operation_number": operation_number
+                        }
+                    }
+                }
+                response.append(doc_response)
+
+            return response
+
+    except Exception as e:
+        logger.error(f"Error retrieving IPID documents: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving IPID documents: {str(e)}"
+        )
+
+
+@router.get("/ipid/structure/{po_number}")
+async def get_ipid_folder_structure(
+        po_number: str,
+        current_user: User = Depends(get_current_user)
+):
+    """Get the complete folder structure and documents under IPID folder for a specific PO number"""
+    try:
+        with db_session:
+            # Get IPID document type
+            doc_type = DocumentTypeV2.get(name=DocumentTypes.IPID.value)
+            if not doc_type:
+                raise HTTPException(status_code=404, detail="IPID document type not found")
+
+            # Find the root IPID folder
+            root_folder = FolderV2.get(lambda f: f.name == "IPID"
+                                                 and f.parent_folder.name == "Document Types"
+                                                 and f.is_active == True)
+            if not root_folder:
+                raise HTTPException(status_code=404, detail="IPID root folder not found")
+
+            # Find the PO folder
+            po_folder = FolderV2.get(lambda f: f.name == po_number
+                                               and f.parent_folder == root_folder
+                                               and f.is_active == True)
+            if not po_folder:
+                raise HTTPException(status_code=404, detail=f"No folder found for PO: {po_number}")
+
+            def get_folder_structure(folder):
+                # Get all active documents in this folder with complete details
+                docs = select(d for d in DocumentV2
+                              if d.folder == folder
+                              and d.doc_type == doc_type
+                              and d.is_active == True).order_by(lambda d: desc(d.created_at))[:]
+
+                documents = []
+                for doc in docs:
+                    if not doc.latest_version:
+                        continue
+
+                    # Get all versions for this document
+                    versions = select(v for v in DocumentVersionV2
+                                      if v.document == doc
+                                      and v.is_active == True
+                                      ).order_by(lambda v: desc(v.created_at))[:]
+
+                    # Format all versions
+                    formatted_versions = []
+                    for version in versions:
+                        # Extract operation number from metadata if available
+                        operation_number = None
+                        if version.metadata and isinstance(version.metadata, dict):
+                            operation_number = version.metadata.get("operation_number")
+
+                        formatted_versions.append({
+                            "id": version.id,
+                            "version_number": version.version_number,
+                            "minio_path": version.minio_path,
+                            "file_size": version.file_size,
+                            "checksum": version.checksum,
+                            "created_at": version.created_at.isoformat() if version.created_at else None,
+                            "created_by_id": version.created_by.id,
+                            "is_active": version.is_active,
+                            "metadata": {
+                                **(version.metadata or {}),
+                                "operation_number": operation_number
+                            }
+                        })
+
+                    documents.append({
+                        "id": doc.id,
+                        "name": doc.name,
+                        "folder_id": doc.folder.id,
+                        "folder_path": doc.folder.path,
+                        "doc_type_id": doc.doc_type.id,
+                        "description": doc.description,
+                        "part_number": doc.part_number,
+                        "production_order_id": doc.production_order.id if doc.production_order else None,
+                        "created_at": doc.created_at.isoformat() if doc.created_at else None,
+                        "created_by_id": doc.created_by.id,
+                        "is_active": doc.is_active,
+                        "latest_version": formatted_versions[0] if formatted_versions else None,
+                        "all_versions": formatted_versions,
+                        "version_count": len(formatted_versions)
+                    })
+
+                # Get all active subfolders
+                subfolders = select(f for f in FolderV2
+                                    if f.parent_folder == folder
+                                    and f.is_active == True
+                                    ).order_by(lambda f: f.name)
+
+                # Build folder structure
+                result = {
+                    "folder_info": {
+                        "id": folder.id,
+                        "name": folder.name,
+                        "path": folder.path,
+                        "created_at": folder.created_at.isoformat() if folder.created_at else None,
+                        "is_active": folder.is_active,
+                        "document_count": len(documents),
+                        "total_versions": sum(doc["version_count"] for doc in documents)
+                    },
+                    "documents": documents,
+                    "subfolders": {},
+                    "total_documents_recursive": len(documents)  # Will be updated below
+                }
+
+                # Recursively process subfolders
+                for subfolder in subfolders:
+                    subfolder_structure = get_folder_structure(subfolder)
+                    result["subfolders"][subfolder.name] = subfolder_structure
+                    # Add subfolder's documents to total count
+                    result["total_documents_recursive"] += subfolder_structure["total_documents_recursive"]
+
+                return result
+
+            # Get the complete structure starting from PO folder
+            structure = get_folder_structure(po_folder)
+
+            # Calculate totals
+            total_documents = structure["total_documents_recursive"]
+            total_versions = structure["folder_info"]["total_versions"]
+            for subfolder in structure["subfolders"].values():
+                total_versions += subfolder["folder_info"]["total_versions"]
+
+            return {
+                "po_number": po_number,
+                "structure": structure,
+                "summary": {
+                    "total_documents": total_documents,
+                    "total_versions": total_versions,
+                    "folder_count": 1 + sum(1 for _ in FolderV2.select(
+                        lambda f: f.path.startswith(po_folder.path + "/")
+                                  and f.is_active == True
+                    ))
+                }
+            }
+
+    except Exception as e:
+        logger.error(f"Error retrieving IPID folder structure: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving IPID folder structure: {str(e)}"
         )

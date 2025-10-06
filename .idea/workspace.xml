@@ -4,69 +4,129 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py">
-      <change afterPath="$PROJECT_DIR$/docs/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/collectors.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/configuration.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/engines.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/index.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/requirements.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docs/workflow.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mkdocs.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/404.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/images/favicon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/bundle.081f42fc.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/bundle.081f42fc.min.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ar.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.da.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.de.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.du.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.el.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.es.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.fi.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.fr.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.he.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.hi.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.hu.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.hy.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.it.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ja.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.jp.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.kn.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ko.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.multi.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.nl.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.no.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.pt.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ro.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ru.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.sa.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.stemmer.support.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.sv.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.ta.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.te.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.th.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.tr.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.vi.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/min/lunr.zh.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/tinyseg.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/lunr/wordcut.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/workers/search.b8dbb3d2.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/javascripts/workers/search.b8dbb3d2.min.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/main.6543a935.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/main.6543a935.min.css.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/palette.06af60db.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/assets/stylesheets/palette.06af60db.min.css.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/collectors/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/configuration/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/engines/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/requirements/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/search/search_index.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/sitemap.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/sitemap.xml.gz" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/site/workflow/index.html" afterDir="false" />
+    <list default="true" id="75f0e075-2f57-41b0-8d6c-5e2aacfdf3ad" name="Changes" comment="oee_engine update (17.09.25)">
+      <change afterPath="$PROJECT_DIR$/app/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/algorithm/BEL_MES_BACKEND.code-workspace" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/algorithm/planned_scheduling.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/algorithm/schedulingcopy2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling_final.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/energymonitoring.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/newlogs.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operatorlog2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production_monitoring_changed.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/scheduled2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/simple_notification_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/api/v1/endpoints/simple_notifications.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/crud/pdc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/energymonitoring.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/logs_backup.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/pdc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/energymonitoring.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/schemas/pdc.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/temp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/algorithm/scheduling.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/algorithm/scheduling.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/algorithm/scheduling_copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/algorithm/scheduling_copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/auth.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/comp_maintainance.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/comp_maintainance.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/comp_operator.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/comp_operator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/component_status.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/component_status.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/daily_production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/daily_production.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/document_management copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/document_management copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/document_management.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/document_management.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/document_management_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/document_management_v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling_copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/dynamic_rescheduling_copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/inventoryv1 copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/inventoryv1 copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/inventoryv1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/inventoryv1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/mpp.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/mpp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/mttr_mtbf.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/mttr_mtbf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/mttr_mtbf_copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/mttr_mtbf_copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/notification_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/notification_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/operator_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operator_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/operator_login.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/operator_login.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/pdc.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/pdc.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/planning.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/planning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/priority_scheduling.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/priority_scheduling.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/production_logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production_logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/production_monitoring.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/production_monitoring.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/programs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/programs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/quality.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/quality.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/scheduled.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/scheduled.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v1/endpoints/toolsprograms.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v1/endpoints/toolsprograms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/components/MachineDashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/components/MachineDashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/components/MachineDetailDialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/components/MachineDetailDialog.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/crud/component_quantities.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/crud/component_quantities.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/crud/leadtime.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/crud/leadtime.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/crud/operation.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/crud/operation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/crud/quality.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/crud/quality.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/crud/raw_material.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/crud/raw_material.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/crud/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/crud/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/connection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/init_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/init_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database/migrations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database/migrations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document_management.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document_management.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/document_management_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/document_management_v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/finance_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/finance_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/hr_models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/hr_models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventory.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventory.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventoryv1 copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventoryv1 copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/inventoryv1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/inventoryv1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/logs.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/logs.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/master_order-copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/master_order-copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/master_order.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/master_order.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/production-copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/production-copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/production.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/quality.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/quality.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/scheduled.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/scheduled.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/finance_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/finance_routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/hr_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/hr_routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/master_order_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/master_order_routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/routes/pokayoke.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routes/pokayoke.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/comp_maintainance.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/comp_maintainance.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/component_quantities.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/component_quantities.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/component_status.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/component_status.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/daily_production.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/daily_production.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/document_management_v2.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/document_management_v2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/document_schemas copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/document_schemas copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/document_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/document_schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/finance_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/finance_schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/hr_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/hr_schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/inventoryv1 copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/inventoryv1 copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/inventoryv1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/inventoryv1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/leadtime.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/leadtime.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/master_order_schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/master_order_schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/mpp.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/mpp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/mttr_mtbf.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/mttr_mtbf.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/operations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/planning.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/planning.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/pokayoke.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/pokayoke.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/quality.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/quality.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/raw_material.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/raw_material.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/scheduled.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/scheduled.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/scheduled1.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/scheduled1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/toolsprograms.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/toolsprograms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/schemas/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/minio_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/minio_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/oee_collector_ems.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/oee_collector_ems.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/oee_collector_opcua.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/oee_collector_opcua.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/simulator/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/simulator/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/simulator/planned_schedule_items.csv" beforeDir="false" afterPath="$PROJECT_DIR$/app/simulator/planned_schedule_items.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/simulator/planned_schedule_items_2.csv" beforeDir="false" afterPath="$PROJECT_DIR$/app/simulator/planned_schedule_items_2.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/simulator/programs.csv" beforeDir="false" afterPath="$PROJECT_DIR$/app/simulator/programs.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/simulator/test copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/simulator/test copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/simulator/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/simulator/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/production_calculations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/production_calculations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_lsv2.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_lsv2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/collector_opcua.py" beforeDir="false" afterPath="$PROJECT_DIR$/collector_opcua.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,28 +158,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;Python.collector_ems.executor&quot;: &quot;Run&quot;,
-    &quot;Python.collector_ems_temp.executor&quot;: &quot;Run&quot;,
-    &quot;Python.collector_lsv2 (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.collector_lsv2_temp.executor&quot;: &quot;Run&quot;,
-    &quot;Python.collector_opcua (1).executor&quot;: &quot;Run&quot;,
-    &quot;Python.collector_opcua.executor&quot;: &quot;Run&quot;,
-    &quot;Python.collector_opcua_temp.executor&quot;: &quot;Run&quot;,
-    &quot;Python.notification_engine.executor&quot;: &quot;Run&quot;,
-    &quot;Python.oee_engine.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.scratch.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
-    &quot;Python.tesst_opcua.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/codes/prometrix/prometrix&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "Python.collector_ems.executor": "Run",
+    "Python.collector_ems_temp.executor": "Run",
+    "Python.collector_lsv2 (1).executor": "Run",
+    "Python.collector_lsv2_temp.executor": "Run",
+    "Python.collector_opcua (1).executor": "Run",
+    "Python.collector_opcua.executor": "Run",
+    "Python.collector_opcua_temp.executor": "Run",
+    "Python.connection.executor": "Run",
+    "Python.notification_engine.executor": "Run",
+    "Python.oee_engine.executor": "Debug",
+    "Python.scratch.executor": "Run",
+    "Python.scratch1.executor": "Run",
+    "Python.scratch_1.executor": "Run",
+    "Python.tesst_opcua.executor": "Run",
+    "Python.test_oee.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "D:/codes/prometrix/prometrix",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
+  },
+  "keyToStringList": {
+    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
+      "Markdown"
+    ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\codes\BELmc\app\config" />
@@ -130,29 +199,7 @@
       <recent name="D:\codes\BELmc" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.collector_opcua (1)">
-    <configuration name="collector_ems" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="BELmc" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/collector_ems.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Python.tesst_opcua">
     <configuration name="collector_lsv2 (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
@@ -197,7 +244,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="oee_engine" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="notification_engine" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="BELmc" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -210,7 +257,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/oee_engine.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/notification_engine.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -241,13 +288,35 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test_oee" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="BELmc" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/test_oee.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.tesst_opcua" />
+        <item itemvalue="Python.test_oee" />
+        <item itemvalue="Python.notification_engine" />
         <item itemvalue="Python.collector_opcua (1)" />
         <item itemvalue="Python.collector_lsv2 (1)" />
-        <item itemvalue="Python.collector_ems" />
-        <item itemvalue="Python.oee_engine" />
-        <item itemvalue="Python.tesst_opcua" />
       </list>
     </recent_temporary>
   </component>
@@ -387,7 +456,23 @@
       <option name="project" value="LOCAL" />
       <updated>1753510249865</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="01.09.25 UPDATE">
+      <option name="closed" value="true" />
+      <created>1756713150899</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1756713150899</updated>
+    </task>
+    <task id="LOCAL-00017" summary="oee_engine update (17.09.25)">
+      <option name="closed" value="true" />
+      <created>1758113168306</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1758113168306</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -418,7 +503,9 @@
     <MESSAGE value="modified oee (performance, quality) for starting from 100%; added optimized collector_ems_1.py (untested)" />
     <MESSAGE value="shift update to BEL shifts. changed collector_ems.py to handle disconnection faster. corrected shift changeover logic." />
     <MESSAGE value="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="24.07.2025 UPDATE. &#10;Added part counter logic to collector_lsv2.py based on PR_FINISHED register&#10;Modified thresholds for collector_ems.py" />
+    <MESSAGE value="01.09.25 UPDATE" />
+    <MESSAGE value="oee_engine update (17.09.25)" />
+    <option name="LAST_COMMIT_MESSAGE" value="oee_engine update (17.09.25)" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -450,17 +537,17 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/oee_engine.py</url>
-          <line>82</line>
+          <line>67</line>
           <option name="timeStamp" value="45" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/oee_engine.py</url>
-          <line>101</line>
+          <line>96</line>
           <option name="timeStamp" value="46" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/oee_engine.py</url>
-          <line>74</line>
+          <line>62</line>
           <option name="timeStamp" value="48" />
         </line-breakpoint>
       </breakpoints>

@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, APIRouter, HTTPException, Query
-from pony.orm import db_session, select, commit, count
+from pony.orm import db_session, select, commit, count, get
 from datetime import datetime, timedelta
 from typing import List, Optional
 import PyPDF2
@@ -13,7 +13,7 @@ from app.models import (
     Unit, RawMaterial, InventoryStatus, PartScheduleStatus, MachineStatus, MachineShift, Status
 )
 from app.schemas.planning import CreateOperationRequest, CreateOrderRequest, OrderUpdateRequest, OperationUpdateRequest, \
-    SaveDataRequest, ProjectPriorityUpdateRequest
+    SaveDataRequest, ProjectPriorityUpdateRequest, OrderUpdate_Response, OrderUpdate_Request, CreateOrderRequest_new
 
 router = APIRouter(prefix="/api/v1/planning", tags=["planning"])
 
@@ -58,18 +58,33 @@ def extract_oarc_details(pdf_content):
         data["Part Desc"] = sale_match.group(2).strip()
 
     # Plant and sequence numbers
-    plant_match = re.search(r"Plant\s*:([^R]+)Rtg Seq No\s*:([^S]+)Sequence No\s*:([^\n]+)", text)
-    if plant_match:
+    plant_match = re.search(r"Plant\s*:([^R]+)Rtg\s+Seq\s*No\s*:([^S]+)Sequence\s*No\s*:([^\n]+)", text)
+    if plant_match.group(1):
         data["Plant"] = plant_match.group(1).strip()
         data["Rtg Seq No"] = plant_match.group(2).strip()
         data["Sequence No"] = plant_match.group(3).strip()
+    else:
+        data["Plant"] = plant_match.group(4).strip()
+        data["Rtg Seq No"] = plant_match.group(5).strip()
+        data["Sequence No"] = plant_match.group(6).strip()
 
     # Required Qty, Launched Qty, and Prod Order No
-    qty_match = re.search(r"Required Qty\s*:([^L]+)Launched Qty\s*:([^P]+)Prod Order No\s*:([^\n]+)", text)
+    qty_match = re.search(
+        r"Required\s*Qty\s*:\s*([^\n]+?)\s*"
+        r"Launched\s*Qty\s*:\s*([^\n]+?)\s*"
+        r"Prod\s*Order\s*No\s*:\s*([^\n]+)",
+        text
+    )
+
     if qty_match:
-        data["Required Qty"] = qty_match.group(1).strip()
-        data["Launched Qty"] = qty_match.group(2).strip()
-        data["Prod Order No"] = qty_match.group(3).strip()
+        if qty_match.group(1):
+            data["Required Qty"] = qty_match.group(1).strip()
+            data["Launched Qty"] = qty_match.group(2).strip()
+            data["Prod Order No"] = qty_match.group(3).strip()
+        else:
+            data["Required Qty"] = qty_match.group(4).strip()
+            data["Launched Qty"] = qty_match.group(5).strip()
+            data["Prod Order No"] = qty_match.group(6).strip()
 
     # Extract operations
     lines = text.split('\n')
@@ -151,7 +166,7 @@ def extract_oarc_details(pdf_content):
         line = line.strip()
 
         # Check if we've reached the raw materials section
-        if "Item" in line and "Child Part No" in line:
+        if "Item" in line and ("Child Part No" in line or "Child" in line):
             raw_materials_started = True
             continue
 
@@ -173,6 +188,8 @@ def extract_oarc_details(pdf_content):
         if raw_materials_started and line.startswith('SPECIAL NOTE'):
             raw_materials_started = False
 
+    print(f"\n\n{'$' * 50}\n{data}\n{'$' * 50}\n\n")
+
     return data
 
 
@@ -182,7 +199,7 @@ def save_to_database(data):
         # Check if order exists
         existing_order = Order.get(production_order=data["Prod Order No"])
         if existing_order:
-            return existing_order
+            raise HTTPException(status_code=400, detail=f"Production order '{data['Prod Order No']}' already exists.")
 
         # Always create a new project instead of reusing existing ones
         # Get current max priority
@@ -353,32 +370,49 @@ def save_to_database(data):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from fastapi import HTTPException
+from pony.orm import db_session, select
+
+# Create a thread pool executor for database operations
+executor = ThreadPoolExecutor(max_workers=10)
+
+
 @router.get("/all_orders")
-@db_session
-def get_all_orders():
+async def get_all_orders():
     try:
-        orders = select(o for o in Order)[:]
-        return [
-            {
-                "id": order.id,
-                "production_order": order.production_order,
-                "sale_order": order.sale_order,
-                "wbs_element": order.wbs_element,
-                "part_number": order.part_number,
-                "part_description": order.part_description,
-                "total_operations": order.total_operations,
-                "required_quantity": order.required_quantity,
-                "launched_quantity": order.launched_quantity,
-                "plant_id": order.plant_id,
-                "project": {
-                    "id": order.project.id,
-                    "name": order.project.name,
-                    "priority": order.project.priority,
-                    "delivery_date": order.project.delivery_date
-                } if order.project else None
-            }
-            for order in orders
-        ]
+        # Run the database query in a thread pool to avoid blocking
+        def get_orders_sync():
+            with db_session:
+                orders = select(o for o in Order)[:]
+                return [
+                    {
+                        "id": order.id,
+                        "production_order": order.production_order,
+                        "sale_order": order.sale_order,
+                        "wbs_element": order.wbs_element,
+                        "part_number": order.part_number,
+                        "part_description": order.part_description,
+                        "total_operations": order.total_operations,
+                        "required_quantity": order.required_quantity,
+                        "launched_quantity": order.launched_quantity,
+                        "plant_id": order.plant_id,
+                        "project": {
+                            "id": order.project.id,
+                            "name": order.project.name,
+                            "priority": order.project.priority,
+                            "delivery_date": order.project.delivery_date
+                        } if order.project else None
+                    }
+                    for order in orders
+                ]
+
+        # Execute the database operation in a thread pool
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(executor, get_orders_sync)
+        return result
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -584,6 +618,254 @@ async def update_operation(
         raise he
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.post("/create_order1")
+async def create_order(order_data: CreateOrderRequest_new):
+    """Create a new order"""
+    try:
+        with db_session:
+            print(f"DEBUG: Starting order creation for production_order: {order_data.production_order}")
+
+            # Check if order already exists
+            existing_order = Order.get(production_order=order_data.production_order)
+            if existing_order:
+                print(f"DEBUG: Order already exists with production_order: {order_data.production_order}")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Production order already exists"
+                )
+
+            # Current date for project dates
+            current_date = datetime.now()
+            print(f"DEBUG: Current date: {current_date}")
+
+            # Get or create project - Fixed to handle multiple projects
+            print(f"DEBUG: Looking for project with name: {order_data.project_name}")
+
+            # Use select to get all projects with this name
+            # existing_projects = list(Project.select(lambda p: p.name == order_data.project_name))
+            # print(f"DEBUG: Found {len(existing_projects)} existing projects with name '{order_data.project_name}'")
+            #
+            # if existing_projects:
+            #     # Use the first existing project
+            #     project = existing_projects[0]
+            #     print(f"DEBUG: Using existing project with ID: {project.id}")
+            # else:
+            #     # Create new project
+            #     print("DEBUG: Creating new project")
+            #     max_priority = select(max(p.priority) for p in Project).first() or 0
+            #     print(f"DEBUG: Max priority found: {max_priority}")
+            #
+            #     project = Project(
+            #         name=order_data.project_name,
+            #         priority=max_priority + 1,  # Auto-increment
+            #         start_date=current_date,
+            #         end_date=current_date,
+            #         delivery_date=current_date
+            #     )
+            #     print(f"DEBUG: Created new project with priority: {project.priority}")
+
+            print("DEBUG: Creating new project")
+            max_priority = select(max(p.priority) for p in Project).first() or 0
+            print(f"DEBUG: Max priority found: {max_priority}")
+
+            project = Project(
+                name=order_data.project_name,
+                priority=max_priority + 1,  # Auto-increment
+                start_date=current_date,
+                end_date=current_date,
+                delivery_date=current_date
+            )
+
+            print(f"DEBUG: Created new project with priority: {project.priority}")
+
+            # Get or create unit based on user input
+            print(f"DEBUG: Looking for unit with name: {order_data.raw_material_unit_name}")
+
+            # Use select to handle potential multiple units
+            existing_units = list(Unit.select(lambda u: u.name == order_data.raw_material_unit_name))
+            print(f"DEBUG: Found {len(existing_units)} existing units with name '{order_data.raw_material_unit_name}'")
+
+            if existing_units:
+                raw_material_unit = existing_units[0]
+                print(f"DEBUG: Using existing unit with ID: {raw_material_unit.id}")
+            else:
+                raw_material_unit = Unit(name=order_data.raw_material_unit_name)
+                print(f"DEBUG: Created new unit: {order_data.raw_material_unit_name}")
+
+            # Check if raw material already exists with the same part number
+            print(f"DEBUG: Checking for existing raw material with part number: {order_data.raw_material_part_number}")
+
+            # Use select to handle potential multiple raw materials
+            existing_raw_materials = list(
+                RawMaterial.select(lambda rm: rm.child_part_number == order_data.raw_material_part_number))
+            print(
+                f"DEBUG: Found {len(existing_raw_materials)} existing raw materials with part number '{order_data.raw_material_part_number}'")
+
+            if existing_raw_materials:
+                print(f"DEBUG: Raw material already exists with part number: {order_data.raw_material_part_number}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Raw material with part number '{order_data.raw_material_part_number}' already exists"
+                )
+
+            # Get or create default inventory status
+            print("DEBUG: Looking for default inventory status 'Available'")
+
+            # Use select to handle potential multiple statuses
+            existing_statuses = list(InventoryStatus.select(lambda s: s.name == "Available"))
+            print(f"DEBUG: Found {len(existing_statuses)} existing statuses with name 'Available'")
+
+            if existing_statuses:
+                default_status = existing_statuses[0]
+                print(f"DEBUG: Using existing status with ID: {default_status.id}")
+            else:
+                default_status = InventoryStatus(
+                    name="Available",
+                    description="Material is available for use"
+                )
+                print("DEBUG: Created new 'Available' status")
+
+            # Create new raw material with user-provided data
+            print("DEBUG: Creating new raw material")
+            raw_material = RawMaterial(
+                child_part_number=order_data.raw_material_part_number,
+                description=order_data.raw_material_description,
+                quantity=order_data.raw_material_quantity,
+                unit=raw_material_unit,
+                status=default_status,
+                available_from=datetime(2024, 1, 2, 9, 0)  # Hardcoded available_from date
+            )
+            print(f"DEBUG: Created raw material with part number: {raw_material.child_part_number}")
+
+            # Create new order
+            print("DEBUG: Creating new order")
+            order = Order(
+                production_order=order_data.production_order,
+                sale_order=order_data.sale_order,
+                wbs_element=order_data.wbs_element,
+                part_number=order_data.part_number,
+                part_description=order_data.part_description,
+                total_operations=order_data.total_operations,
+                required_quantity=order_data.required_quantity,
+                launched_quantity=order_data.launched_quantity,
+                plant_id=str(order_data.plant_id),  # Convert to string as required by model
+                project=project,
+                raw_material=raw_material  # Link the raw material to the order
+            )
+            print(f"DEBUG: Created order with ID: {order.id}")
+
+            # Create initial 'inactive' status for scheduling
+            print("DEBUG: Creating part schedule status")
+
+            # Use select to check for existing part status
+            existing_part_statuses = list(PartScheduleStatus.select(
+                lambda
+                    ps: ps.part_number == order_data.part_number and ps.production_order == order_data.production_order
+            ))
+            print(f"DEBUG: Found {len(existing_part_statuses)} existing part statuses")
+
+            if not existing_part_statuses:
+                part_status = PartScheduleStatus(
+                    part_number=order_data.part_number,
+                    production_order=order_data.production_order,
+                    status='inactive'  # Default to inactive when order is created
+                )
+                print("DEBUG: Created new part schedule status")
+            else:
+                print("DEBUG: Part schedule status already exists")
+
+            # Check if there are existing operations for this part number that we should duplicate
+            print(f"DEBUG: Looking for similar orders with part number: {order_data.part_number}")
+
+            # First, find other orders with the same part number
+            similar_orders = list(
+                select(o for o in Order if o.part_number == order_data.part_number and o.id != order.id))
+            print(f"DEBUG: Found {len(similar_orders)} similar orders")
+
+            # If there are similar orders, duplicate their operations
+            if similar_orders:
+                # Get the first similar order
+                source_order = similar_orders[0]
+                print(f"DEBUG: Using source order ID: {source_order.id} for operation duplication")
+
+                # Get all operations from the source order
+                source_operations = list(select(op for op in Operation if op.order == source_order))
+                print(f"DEBUG: Found {len(source_operations)} operations to duplicate")
+
+                # Duplicate each operation for the new order
+                for i, source_op in enumerate(source_operations):
+                    new_operation = Operation(
+                        order=order,
+                        operation_number=source_op.operation_number,
+                        operation_description=source_op.operation_description,
+                        setup_time=source_op.setup_time,
+                        ideal_cycle_time=source_op.ideal_cycle_time,
+                        work_center=source_op.work_center,
+                        machine=source_op.machine
+                    )
+                    print(f"DEBUG: Duplicated operation {i + 1}/{len(source_operations)}: {source_op.operation_number}")
+
+                # Update total operations count
+                order.total_operations = len(source_operations)
+                print(f"DEBUG: Updated total operations to: {order.total_operations}")
+            else:
+                print("DEBUG: No similar orders found, no operations to duplicate")
+
+            print("DEBUG: Committing transaction")
+            commit()
+
+            print("DEBUG: Order creation completed successfully")
+            return {
+                "id": order.id,
+                "production_order": order.production_order,
+                "sale_order": order.sale_order,
+                "wbs_element": order.wbs_element,
+                "part_number": order.part_number,
+                "part_description": order.part_description,
+                "total_operations": order.total_operations,
+                "required_quantity": order.required_quantity,
+                "launched_quantity": order.launched_quantity,
+                "plant_id": order.plant_id,
+                "project": {
+                    "id": order.project.id,
+                    "name": order.project.name,
+                    "priority": order.project.priority,
+                    "start_date": order.project.start_date,
+                    "end_date": order.project.end_date,
+                    "delivery_date": order.project.delivery_date
+                },
+                "raw_material": {
+                    "id": order.raw_material.id,
+                    "child_part_number": order.raw_material.child_part_number,
+                    "description": order.raw_material.description,
+                    "quantity": order.raw_material.quantity,
+                    "available_from": order.raw_material.available_from,
+                    "unit": {
+                        "id": order.raw_material.unit.id,
+                        "name": order.raw_material.unit.name
+                    },
+                    "status": {
+                        "id": order.raw_material.status.id,
+                        "name": order.raw_material.status.name
+                    }
+                }
+            }
+
+    except HTTPException as he:
+        print(f"DEBUG: HTTPException raised: {he.detail}")
+        raise he
+    except Exception as e:
+        print(f"DEBUG: Unexpected error: {str(e)}")
+        print(f"DEBUG: Error type: {type(e).__name__}")
+        import traceback
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating order: {str(e)}"
+        )
 
 
 @router.post("/create_order")
@@ -1115,3 +1397,148 @@ async def get_project_priorities():
             status_code=500,
             detail=f"Error retrieving project priorities: {str(e)}"
         )
+
+
+@router.delete("/orders/{order_id}", status_code=200)
+@db_session
+def delete_order(order_id: int):
+    order = Order.get(id=order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    # Save references to foreign keys only after confirming order exists
+    raw_material_ref = order.raw_material
+    project_ref = order.project
+
+    # Find and delete associated PartScheduleStatus if it exists
+    production_order = order.production_order if hasattr(order, 'production_order') else str(order_id)
+    part_schedule_status = PartScheduleStatus.get(production_order=production_order)
+    if part_schedule_status:
+        part_schedule_status.delete()
+
+    # Delete all related child entities
+    for op in order.operations:
+        op.delete()
+    for tool in order.tools:
+        tool.delete()
+    for jig in order.jigs_fixtures:
+        jig.delete()
+    for mpp in order.mpps:
+        mpp.delete()
+    for psi in order.planned_schedule_items:
+        psi.delete()
+    for req in order.inventory_requests:
+        req.delete()
+    for ot in order.order_tools:
+        ot.delete()
+    for req in order.inventory_requests:
+        req.delete()
+
+    # Handle DocumentV2 entities - preserve IPID documents
+    for docv2 in order.documents_v2:
+        if docv2.doc_type.name == "IPID":
+            docv2.production_order = None
+        elif docv2.doc_type.name == "REPORT":
+            docv2.production_order = None
+        else:
+            docv2.delete()
+
+    # Delete the order itself
+    order.delete()
+
+    # Clean up orphaned references if they're not used by other orders
+    # --- PRIORITY REARRANGEMENT LOGIC STARTS HERE ---
+    if project_ref:
+        # Check if project has no more orders after deletion
+        if not project_ref.orders:
+            deleted_priority = project_ref.priority
+            project_ref.delete()
+            # Rearrange priorities for remaining projects
+            for proj in Project.select(lambda p: p.priority > deleted_priority):
+                proj.priority -= 1
+    # --- PRIORITY REARRANGEMENT LOGIC ENDS HERE ---
+
+    if raw_material_ref and not raw_material_ref.orders:
+        raw_material_ref.delete()
+
+    commit()
+    return {"message": "Order and related entities deleted successfully."}
+
+
+@router.put("/orders/{order_id}", response_model=OrderUpdate_Response)
+@db_session
+def update_order(order_id: int, order_update: OrderUpdate_Request):
+    """
+    Update editable fields of an existing order.
+
+    Editable fields:
+    - part_description
+    - wbs_element
+    - launched_quantity
+    - project_name (updates the associated project)
+    - sale_order
+    """
+    try:
+        # Get the order by ID
+        order = get(o for o in Order if o.id == order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        # Track if any changes were made
+        changes_made = False
+
+        # Update part_description if provided
+        if order_update.part_description is not None:
+            order.part_description = order_update.part_description
+            changes_made = True
+
+        # Update wbs_element if provided
+        if order_update.wbs_element is not None:
+            order.wbs_element = order_update.wbs_element
+            changes_made = True
+
+        # Update launched_quantity if provided
+        if order_update.launched_quantity is not None:
+            if order_update.launched_quantity < 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Launched quantity cannot be negative"
+                )
+            order.launched_quantity = order_update.launched_quantity
+            changes_made = True
+
+        # Update sale_order if provided
+        if order_update.sale_order is not None:
+            order.sale_order = order_update.sale_order
+            changes_made = True
+
+        # Update project_name if provided
+        if order_update.project_name is not None:
+            # Update the name of the existing project associated with this order
+            order.project.name = order_update.project_name
+            changes_made = True
+
+        if not changes_made:
+            raise HTTPException(
+                status_code=400,
+                detail="No valid fields provided for update"
+            )
+
+        # Commit changes (handled by @db_session decorator)
+
+        # Return updated order data
+        return OrderUpdate_Response(
+            id=order.id,
+            production_order=order.production_order,
+            part_description=order.part_description,
+            wbs_element=order.wbs_element,
+            launched_quantity=order.launched_quantity,
+            project_name=order.project.name,
+            sale_order=order.sale_order,
+            updated_at=datetime.now()
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

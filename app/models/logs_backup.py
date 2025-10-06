@@ -19,7 +19,6 @@ class MachineStatusLog(db.Entity):
     is_acknowledged = Required(bool, default=False)  # Whether notification is acknowledged
     acknowledged_by = Optional(str)  # User ID who acknowledged
     acknowledged_at = Optional(datetime)  # When it was acknowledged
-    read = Optional(bool, default=False)  # Whether notification has been read
 
     def to_dict(self):
         return {
@@ -32,8 +31,7 @@ class MachineStatusLog(db.Entity):
             "created_by": self.created_by,
             "is_acknowledged": self.is_acknowledged,
             "acknowledged_by": self.acknowledged_by,
-            "acknowledged_at": self.acknowledged_at,
-            "read": self.read
+            "acknowledged_at": self.acknowledged_at
         }
 
 
@@ -49,7 +47,6 @@ class RawMaterialStatusLog(db.Entity):
     is_acknowledged = Required(bool, default=False)  # Whether notification is acknowledged
     acknowledged_by = Optional(str)  # User ID who acknowledged
     acknowledged_at = Optional(datetime)  # When it was acknowledged
-    read = Optional(bool, default=False)  # Whether notification has been read
 
     def to_dict(self):
         return {
@@ -62,8 +59,7 @@ class RawMaterialStatusLog(db.Entity):
             "created_by": self.created_by,
             "is_acknowledged": self.is_acknowledged,
             "acknowledged_by": self.acknowledged_by,
-            "acknowledged_at": self.acknowledged_at,
-            "read": self.read
+            "acknowledged_at": self.acknowledged_at
         }
 
 
@@ -154,7 +150,6 @@ class PokaYokeCompletedLog(db.Entity):
     all_items_passed = Required(bool)
     comments = Optional(str)
     item_responses = Set('PokaYokeItemResponse')
-    read = Optional(bool, default=False)  # Whether notification has been read
 
     def to_dict(self):
         return {
@@ -168,8 +163,7 @@ class PokaYokeCompletedLog(db.Entity):
             "completed_at": self.completed_at,
             "all_items_passed": self.all_items_passed,
             "comments": self.comments,
-            "responses": [resp.to_dict() for resp in self.item_responses],
-            "read": self.read
+            "responses": [resp.to_dict() for resp in self.item_responses]
         }
 
 
@@ -201,7 +195,6 @@ class MachineCalibrationLog(db.Entity):
     timestamp = Required(datetime, default=datetime.now)
     calibration_due_date = Optional(date)
     machine_id = Optional(Machine)
-    read = Optional(bool, default=False)  # Whether notification has been read
 
     def after_insert(self):
         """
@@ -258,7 +251,6 @@ class InstrumentCalibrationLog(db.Entity):
     timestamp = Required(datetime, default=datetime.now)
     calibration_due_date = Optional(date)
     instrument_id = Optional(CalibrationSchedule)
-    read = Optional(bool, default=False)  # Whether notification has been read
 
     def after_insert(self):
         """
@@ -307,4 +299,3 @@ class InstrumentCalibrationLog(db.Entity):
             print(f"Error scheduling instrument notification for log ID {self.id}: {str(e)}")
             import traceback
             traceback.print_exc()
-

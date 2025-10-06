@@ -35,7 +35,8 @@ def connect_to_db():
         cursor.execute("CREATE SCHEMA IF NOT EXISTS document_management_v2")
         cursor.execute("CREATE SCHEMA IF NOT EXISTS quality")
         cursor.execute("CREATE SCHEMA IF NOT EXISTS logs")
-        cursor.execute("CREATE SCHEMA IF NOT EXISTS ems")
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS EMS")
+        # cursor.execute("CREATE SCHEMA IF NOT EXISTS energymonitoring")
 
 
 
@@ -47,7 +48,8 @@ def connect_to_db():
         cursor.close()
 
     # Import all models to ensure they're registered with the database
-    from ..models import hr_models, finance_models, master_order, user, document_management_v2, inventoryv1, quality, ems, inventory, logs, production
+    from ..models import hr_models, finance_models, master_order, user, document_management_v2, quality, inventoryv1, inventory, document_management
+    from ..models import logs, document_management_v2, production
 
     # Generate mapping after all models are imported
-    db.generate_mapping(create_tables=True)
+    db.generate_mapping(create_tables=True) 

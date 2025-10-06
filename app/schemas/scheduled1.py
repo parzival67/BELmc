@@ -10,6 +10,7 @@ class PartStatusUpdate(BaseModel):
 
 class ScheduledOperation(BaseModel):
     component: str
+    part_description: str  # Added part description field
     description: str
     machine: str
     start_time: datetime
@@ -59,6 +60,7 @@ class ProductionLogResponse(BaseModel):
     quantity_completed: int
     quantity_rejected: int
     part_number: Optional[str]      # Made optional
+    production_order: Optional[str]
     operation_description: Optional[str]  # Made optional
     machine_name: Optional[str]     # Made optional
     notes: Optional[str]

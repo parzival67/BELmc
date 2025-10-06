@@ -15,18 +15,25 @@ from utils import DatabaseManager
 # ===== OPC UA Client Management =====
 
 class OpcUaClient:
+    """
+    Manages connection to OPC UA server and reading values from nodes.
+    """
     def __init__(self, server_url, username=None, password=None):
         self.server_url = server_url
         self.username = username
         self.password = password
         self.client = Client(server_url)
 
+        # Optional authentication
         if username:
             self.client.set_user(username)
         if password:
             self.client.set_password(password)
 
     def connect(self, machine_id):
+        """
+        Connect to the OPC UA server. If failed, mark machine as disconnected.
+        """
         try:
             self.client.connect()
             print(f"Successfully connected to OPC UA Server: {self.server_url}")
@@ -38,6 +45,9 @@ class OpcUaClient:
             return False
 
     def disconnect(self):
+        """
+        Disconnect from the OPC UA server.
+        """
         try:
             if self.is_connected():
                 self.client.disconnect()
@@ -46,6 +56,9 @@ class OpcUaClient:
             print(f"Error during OPC UA disconnect: {e}")
 
     def is_connected(self):
+        """
+        Check if the OPC UA client is still connected.
+        """
         try:
             if self.client.uaclient and self.client.uaclient._uasocket:
                 return self.client.uaclient._uasocket._thread.is_alive()
@@ -54,6 +67,9 @@ class OpcUaClient:
             return False
 
     def get_node_value(self, node_id):
+        """
+        Get value from a specific node ID.
+        """
         try:
             return self.client.get_node(node_id).get_value()
         except Exception as e:
@@ -64,9 +80,14 @@ class OpcUaClient:
 # ===== Machine Data Collection =====
 
 class MachineDataCollector:
+    """
+    Reads machine operational data from defined OPC UA nodes.
+    """
     def __init__(self, machine_id, opcua_client):
         self.machine_id = machine_id
         self.opcua_client = opcua_client
+
+        # Node ID mappings for relevant machine metrics
         self.node_paths = {
             "prog_status": "ns=2;s=/Channel/State/progStatus",
             "op_mode": "ns=2;s=/Bag/State/opMode",
@@ -76,16 +97,21 @@ class MachineDataCollector:
         }
 
     def collect_data(self):
-        """Collect current machine data via OPC UA"""
+        """
+        Collects current machine status and production data from OPC UA nodes.
+        Returns a structured dictionary.
+        """
         try:
             if not self.opcua_client.is_connected():
                 raise ConnectionError("OPC UA client not connected")
 
             data = {}
+
+            # Read all required nodes
             for key, node_id in self.node_paths.items():
                 data[key] = self.opcua_client.get_node_value(node_id)
 
-            # Convert numeric values to integers
+            # Ensure integer types for certain fields
             for key in ["prog_status", "op_mode", "part_count"]:
                 data[key] = int(data[key])
 
@@ -93,11 +119,10 @@ class MachineDataCollector:
             if data["prog_status"] == 3:
                 data["machine_status"] = 2  # Production
                 DatabaseManager.close_downtime(machine_id=14)
-
             else:
                 data["machine_status"] = 1  # Idle
 
-            # Default part status
+            # Add placeholder part status (can be enhanced)
             data["part_status"] = 0
 
             return data
@@ -110,6 +135,9 @@ class MachineDataCollector:
 # ===== Main Application =====
 
 class MachineMonitor:
+    """
+    Main monitoring loop: Connects to OPC UA, collects data, stores it in the database.
+    """
     def __init__(self, config_path="config/opcua_settings.json"):
         self.config_path = config_path
         self.config = None
@@ -118,16 +146,17 @@ class MachineMonitor:
         self.data_collector = None
         self.running = False
 
-        # Operation intervals in seconds
-        self.poll_interval = 1
-        self.retry_delay = 60
+        # Timings
+        self.poll_interval = 1        # Data collection frequency (in seconds)
+        self.retry_delay = 60         # Wait time on error before retry
 
     def load_config(self):
-        """Load configuration from JSON file"""
+        """
+        Load OPC UA connection and machine config from a JSON file.
+        """
         try:
             with open(self.config_path, "r") as file:
                 self.config = json.load(file)['opcua'][0]
-
             self.machine_id = self.config['machine_id']
             return True
         except Exception as e:
@@ -135,17 +164,19 @@ class MachineMonitor:
             return False
 
     def setup(self):
-        """Setup database connection and OPC UA client"""
+        """
+        Setup database connection, OPC UA client, and data collector.
+        """
         try:
-            # Connect to database
+            # Connect to the database
             connect_to_db()
             print("Database connected successfully")
 
-            # Load configuration
+            # Load machine-specific OPC UA settings
             if not self.load_config():
                 return False
 
-            # Create OPC UA client
+            # Build OPC UA server URL and create client
             server_url = f"opc.tcp://{self.config['ip_address']}:{self.config['port']}"
             self.opcua_client = OpcUaClient(
                 server_url,
@@ -153,23 +184,28 @@ class MachineMonitor:
                 password=self.config['password']
             )
 
+            # Optional: Enable for unsecured connection
             # self.opcua_client.client.set_security_string("None,None,None,None")
 
-            # Create data collector
+            # Initialize data collector
             self.data_collector = MachineDataCollector(
                 self.machine_id,
                 self.opcua_client
             )
 
+            # Initialize DB tables if empty
             DatabaseManager.initialize_db()
 
             return True
+
         except Exception as e:
             print(f"Setup error: {e}")
             return False
 
     def run(self):
-        """Run the monitoring loop"""
+        """
+        Run the continuous monitoring loop.
+        """
         if not self.setup():
             print("Failed to set up the machine monitor")
             return
@@ -180,20 +216,20 @@ class MachineMonitor:
         try:
             while self.running:
                 try:
-                    # Check if connected, if not, connect
+                    # Ensure connection to OPC UA server
                     if not self.opcua_client.is_connected():
                         self.opcua_client.connect(self.machine_id)
                         if self.opcua_client.is_connected():
                             print("Connected to OPC UA server")
-                        continue  # Skip this iteration to ensure we're connected
+                        continue  # Skip current loop to retry connection
 
-                    # Collect data from machine
+                    # Collect real-time machine data
                     data = self.data_collector.collect_data()
 
-                    # Record data to database
+                    # Save data to the database
                     DatabaseManager.record_machine_data(self.machine_id, data)
 
-                    # Wait for next poll interval
+                    # Wait for next polling interval
                     time.sleep(self.poll_interval)
 
                 except ConnectionError:
@@ -214,7 +250,9 @@ class MachineMonitor:
             self.cleanup()
 
     def cleanup(self):
-        """Clean up resources before exit"""
+        """
+        Cleanly shut down the system.
+        """
         try:
             if self.opcua_client:
                 self.opcua_client.disconnect()
@@ -226,5 +264,6 @@ class MachineMonitor:
 # ===== Entry Point =====
 
 if __name__ == '__main__':
+    # Start the monitoring process
     monitor = MachineMonitor()
     monitor.run()

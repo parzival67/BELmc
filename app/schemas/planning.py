@@ -75,6 +75,7 @@ class CreateOrderRequest(BaseModel):
     project_name: str
 
 
+
 # Request model for creating new operation
 class CreateOperationRequest(BaseModel):
     order_id: int
@@ -173,3 +174,42 @@ class SaveDataRequest(BaseModel):
 
 class ProjectPriorityUpdateRequest(BaseModel):
     priority: int
+
+
+class OrderUpdate_Request(BaseModel):
+    part_description: Optional[str] = None
+    wbs_element: Optional[str] = None
+    launched_quantity: Optional[int] = None
+    project_name: Optional[str] = None
+    sale_order: Optional[str] = None
+
+class OrderUpdate_Response(BaseModel):
+    id: int
+    production_order: str
+    part_description: Optional[str]
+    wbs_element: Optional[str]
+    launched_quantity: int
+    project_name: str
+    sale_order: Optional[str]
+    updated_at: datetime
+
+
+# Request model for creating new order
+class CreateOrderRequest_new(BaseModel):
+    production_order: str
+    sale_order: str
+    wbs_element: str
+    part_number: str
+    part_description: str
+    total_operations: int
+    required_quantity: int
+    launched_quantity: int
+    plant_id: int
+    project_name: str
+
+    # Raw material fields
+    raw_material_part_number: str
+    raw_material_description: str
+    raw_material_quantity: float
+    raw_material_unit_name: str  # e.g., "KG", "PCS", "MT", etc.
+
